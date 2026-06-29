@@ -43,18 +43,19 @@
   .nav-btn.active { color: var(--sage); }
   .nav-icon { font-size: 19px; }
 
-  /* ── TODAY ── */
-  .today-eyebrow { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
-  .today-title { font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--text); margin-bottom: 10px; }
-  .today-chips { display: flex; gap: 8px; margin-bottom: 24px; align-items: center; }
+  /* ── WORKOUT HEADER ── */
+  .wk-day-header { margin-bottom: 20px; }
+  .wk-eyebrow { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 5px; }
+  .wk-today-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.2; }
+  .wk-chips { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
   .chip { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; letter-spacing: .04em; text-transform: uppercase; }
   .chip-strength { background: #2E2C1A; color: #C0B060; border: 1px solid #4A441A; }
   .chip-climb   { background: var(--olive-dim); color: var(--sage); border: 1px solid #3A4020; }
   .chip-cycle   { background: #1A2228; color: #70A8C0; border: 1px solid #243040; }
   .chip-dur     { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
 
-  .go-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 18px; background: var(--olive-dim); border: 1px solid var(--olive); border-radius: 12px; color: var(--sage); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 24px; letter-spacing: .02em; }
-  .go-btn:active { opacity: .8; }
+  .start-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 18px; background: var(--olive-dim); border: 1px solid var(--olive); border-radius: 12px; color: var(--sage); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 20px; letter-spacing: .02em; }
+  .start-btn:active { opacity: .8; }
   .go-arrow { font-size: 18px; }
 
   .section-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
@@ -62,7 +63,7 @@
   .preview-name { font-size: 13px; color: var(--text); }
   .preview-target { font-size: 11px; color: var(--text3); font-family: monospace; }
 
-  /* ── WORKOUT ── */
+  /* ── ACTIVE WORKOUT ── */
   .wk-header { margin-bottom: 16px; }
   .wk-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
   .progress-wrap { height: 2px; background: var(--border); border-radius: 2px; }
@@ -70,34 +71,16 @@
   .progress-label { font-size: 11px; color: var(--text3); margin-top: 5px; letter-spacing: .03em; }
 
   .ex-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; overflow: hidden; transition: border-color .25s; }
-  .ex-card.done { border-color: var(--olive); background: var(--bg2); }
-
+  .ex-card.done { border-color: var(--olive); }
   .ex-header { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; user-select: none; }
-
-  /* THE CIRCLE — explicit size and style */
-  .ex-circle {
-    width: 26px; height: 26px; border-radius: 50%;
-    border: 2px solid var(--border2);
-    background: transparent;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 13px; color: transparent;
-    transition: all .2s;
-    cursor: pointer;
-  }
-  .ex-card.done .ex-circle {
-    background: var(--olive);
-    border-color: var(--olive);
-    color: var(--bg);
-  }
-
+  .ex-circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border2); background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; color: transparent; transition: all .2s; cursor: pointer; }
+  .ex-card.done .ex-circle { background: var(--olive); border-color: var(--olive); color: var(--bg); }
   .ex-info { flex: 1; min-width: 0; }
   .ex-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
   .ex-card.done .ex-name { color: var(--text3); text-decoration: line-through; text-decoration-color: var(--text3); }
   .ex-tgt { font-size: 11px; color: var(--text3); font-family: monospace; margin-top: 2px; }
   .ex-chevron { font-size: 14px; color: var(--text3); transition: transform .2s; flex-shrink: 0; }
   .ex-card.open .ex-chevron { transform: rotate(180deg); }
-
   .ex-body { padding: 0 14px 14px; display: none; }
   .ex-card.open .ex-body { display: block; }
 
@@ -114,20 +97,37 @@
   .set-check:active { opacity: .7; }
   .add-set { width: 100%; padding: 7px; background: none; border: 1px dashed var(--border2); border-radius: 8px; color: var(--text3); font-size: 12px; cursor: pointer; margin-top: 2px; }
   .add-set:active { background: var(--bg3); }
-
   .note-field { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; color: var(--text); font-family: -apple-system, sans-serif; outline: none; resize: none; min-height: 68px; line-height: 1.4; }
   .note-field:focus { border-color: var(--olive); }
 
-  /* ── TIMER ── */
-  .timer-strip { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
-  .timer-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 12px; color: var(--text2); cursor: pointer; }
-  .timer-btn.active { background: var(--olive-dim); border-color: var(--olive); color: var(--sage); }
-  .timer-val { font-family: monospace; font-size: 18px; color: var(--sage); letter-spacing: .04em; }
+  /* ── TIMER TRIGGER ── */
+  .timer-trigger { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
+  .timer-trigger:active { opacity: .7; }
+  .timer-trigger-label { font-size: 12px; color: var(--text2); }
+  .timer-trigger-icon { font-size: 16px; }
 
   /* ── FINISH ── */
   .finish-btn { width: 100%; padding: 15px; background: var(--olive); color: var(--bg); font-size: 15px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; margin-top: 16px; letter-spacing: .02em; }
   .finish-btn:disabled { background: var(--bg3); color: var(--text3); }
   .finish-btn:active { opacity: .85; }
+
+  /* ── TIMER SCREEN ── */
+  .timer-screen-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 0; }
+  .timer-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
+  .timer-ex-name { font-size: 15px; color: var(--text2); margin-bottom: 36px; text-align: center; }
+  .timer-display { font-size: 80px; font-weight: 200; font-family: -apple-system, monospace; color: var(--sage); letter-spacing: .02em; line-height: 1; margin-bottom: 48px; }
+  .timer-display.warn { color: var(--warn); }
+  .timer-display.done-clr { color: var(--olive); }
+  .timer-ring { margin-bottom: 24px; }
+  .timer-controls { display: flex; gap: 16px; margin-bottom: 40px; }
+  .timer-ctrl-btn { width: 64px; height: 64px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .timer-ctrl-btn:active { opacity: .7; }
+  .timer-ctrl-btn.primary { background: var(--olive-dim); border-color: var(--olive); color: var(--sage); width: 72px; height: 72px; font-size: 26px; }
+  .timer-back-btn { padding: 10px 28px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 14px; cursor: pointer; }
+  .timer-back-btn:active { opacity: .7; }
+  .timer-progress-ring { position: relative; width: 200px; height: 200px; }
+  .timer-progress-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .timer-progress-ring .timer-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 
   /* ── SUMMARY ── */
   .sum-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -145,6 +145,42 @@
   .save-msg.ok  { background: var(--olive-dim); color: var(--sage); }
   .save-msg.err { background: #2E1A0A; color: var(--warn); }
 
+  /* ── CALENDAR ── */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .cal-month-title { font-size: 20px; font-weight: 700; color: var(--text); }
+  .cal-nav-btn { width: 36px; height: 36px; border-radius: 9px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .cal-nav-btn:active { opacity: .7; }
+  .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 6px; }
+  .cal-dow { text-align: center; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; padding: 4px 0; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 24px; }
+  .cal-day { aspect-ratio: 1; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; background: var(--bg2); border: 1px solid transparent; }
+  .cal-day.empty { background: transparent; cursor: default; border-color: transparent; }
+  .cal-day.today { border-color: var(--olive); }
+  .cal-day.today .cal-day-num { color: var(--sage); font-weight: 700; }
+  .cal-day.has-session .cal-dot { display: block; }
+  .cal-day.logged { background: var(--olive-dim); border-color: #3A4A1A; }
+  .cal-day.logged .cal-day-num { color: var(--sage); }
+  .cal-day.scheduled { border-color: var(--border2); }
+  .cal-day.past-no-session { opacity: .4; }
+  .cal-day-num { font-size: 13px; color: var(--text2); line-height: 1; }
+  .cal-dot { display: none; width: 5px; height: 5px; border-radius: 50%; background: var(--olive); }
+  .cal-day.logged .cal-dot { background: var(--sage); }
+
+  /* ── CALENDAR DETAIL ── */
+  .cal-detail { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-top: 4px; }
+  .cal-detail-date { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .cal-detail-name { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+  .cal-detail-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border); }
+  .cal-detail-ex { font-size: 13px; color: var(--text); }
+  .cal-detail-val { font-size: 12px; color: var(--text2); font-family: monospace; }
+  .cal-expand-btn { width: 100%; padding: 8px; background: none; border: 1px dashed var(--border2); border-radius: 8px; color: var(--text3); font-size: 12px; cursor: pointer; margin-top: 10px; }
+  .cal-expand-btn:active { background: var(--bg3); }
+  .cal-sets-detail { font-size: 11px; color: var(--text3); font-family: monospace; line-height: 1.7; margin-top: 3px; }
+  .cal-future-ex { font-size: 12px; color: var(--text3); padding: 5px 0; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+  .cal-future-tgt { font-family: monospace; }
+  .cal-open-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 10px; background: var(--olive-dim); border: 1px solid var(--olive); border-radius: 9px; color: var(--sage); font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 12px; letter-spacing: .02em; }
+  .cal-open-btn:active { opacity: .8; }
+
   /* ── HISTORY ── */
   .hist-empty { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px; line-height: 1.6; }
   .hist-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
@@ -155,9 +191,9 @@
   /* ── SETTINGS ── */
   .set-section { margin-bottom: 24px; }
   .set-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
-  .set-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; margin-bottom: 6px; }
-  .set-row-title { font-size: 14px; color: var(--text); }
-  .set-row-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; margin-bottom: 6px; }
+  .settings-row-title { font-size: 14px; color: var(--text); }
+  .settings-row-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
   .toggle { width: 44px; height: 26px; background: var(--border); border-radius: 13px; cursor: pointer; position: relative; transition: background .2s; border: none; flex-shrink: 0; }
   .toggle.on { background: var(--olive); }
   .toggle::after { content: ''; width: 20px; height: 20px; background: var(--sand); border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform .2s; }
@@ -177,25 +213,53 @@
 <body>
 <div id="app">
 
-  <!-- TODAY -->
-  <div class="screen active" id="screen-today">
-    <div class="today-eyebrow" id="today-eyebrow"></div>
-    <div class="today-title" id="today-title"></div>
-    <div class="today-chips" id="today-chips"></div>
-    <button class="go-btn" id="go-btn">Open workout <span class="go-arrow">→</span></button>
-    <div class="section-label">Exercises</div>
-    <div id="today-preview"></div>
+  <!-- WORKOUT (landing screen) -->
+  <div class="screen active" id="screen-workout">
+    <!-- idle state: shown when no active session -->
+    <div id="wk-idle">
+      <div class="wk-day-header">
+        <div class="wk-eyebrow" id="wk-eyebrow"></div>
+        <div class="wk-today-title" id="wk-today-title"></div>
+        <div class="wk-chips" id="wk-chips"></div>
+      </div>
+      <button class="start-btn" id="start-btn">Start workout <span class="go-arrow">→</span></button>
+      <div class="section-label">Today's exercises</div>
+      <div id="wk-preview"></div>
+    </div>
+    <!-- active session -->
+    <div id="wk-active" style="display:none">
+      <div class="wk-header">
+        <div class="wk-title" id="wk-title"></div>
+        <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div class="progress-label" id="progress-label"></div>
+      </div>
+      <div id="ex-list"></div>
+      <button class="finish-btn" id="finish-btn">Finish &amp; review</button>
+    </div>
   </div>
 
-  <!-- WORKOUT -->
-  <div class="screen" id="screen-workout">
-    <div class="wk-header">
-      <div class="wk-title" id="wk-title"></div>
-      <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="progress-label"></div>
+  <!-- TIMER (full-screen) -->
+  <div class="screen" id="screen-timer">
+    <div class="timer-screen-wrap">
+      <div class="timer-label">Rest Timer</div>
+      <div class="timer-ex-name" id="timer-ex-name"></div>
+      <div class="timer-progress-ring" id="timer-ring">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="6"/>
+          <circle id="timer-arc" cx="100" cy="100" r="88" fill="none" stroke="var(--olive)" stroke-width="6"
+            stroke-dasharray="553" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <div class="timer-center">
+          <div class="timer-display" id="timer-display">01:30</div>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-ctrl-btn" id="timer-reset-btn" title="Reset">↺</button>
+        <button class="timer-ctrl-btn primary" id="timer-pause-btn" title="Pause">⏸</button>
+        <button class="timer-ctrl-btn" id="timer-skip-btn" title="Skip">⏭</button>
+      </div>
+      <button class="timer-back-btn" id="timer-back-btn">← Back to workout</button>
     </div>
-    <div id="ex-list"></div>
-    <button class="finish-btn" id="finish-btn">Finish &amp; review</button>
   </div>
 
   <!-- SUMMARY -->
@@ -209,10 +273,20 @@
     <div class="save-msg" id="save-msg" style="display:none"></div>
   </div>
 
-  <!-- HISTORY -->
-  <div class="screen" id="screen-history">
-    <div style="font-size:22px;font-weight:700;margin-bottom:18px;color:var(--text)">History</div>
-    <div id="hist-list"></div>
+  <!-- CALENDAR -->
+  <div class="screen" id="screen-calendar">
+    <div class="cal-header">
+      <button class="cal-nav-btn" id="cal-prev">‹</button>
+      <div class="cal-month-title" id="cal-month-title"></div>
+      <button class="cal-nav-btn" id="cal-next">›</button>
+    </div>
+    <div class="cal-dow-row">
+      <div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div>
+      <div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div>
+      <div class="cal-dow">Sa</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div id="cal-detail-wrap"></div>
   </div>
 
   <!-- SETTINGS -->
@@ -225,27 +299,26 @@
     </div>
     <div class="set-section">
       <div class="set-label">Rest timer</div>
-      <div class="set-row">
-        <div><div class="set-row-title">Show rest timer</div><div class="set-row-sub">Appears after logging each set</div></div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Auto-start after each set</div><div class="settings-row-sub">Timer launches automatically when you log a set</div></div>
         <button class="toggle" id="timer-toggle"></button>
       </div>
-      <div class="set-row" id="dur-row" style="display:none">
-        <div class="set-row-title">Duration</div>
+      <div class="settings-row" id="dur-row" style="display:none">
+        <div class="settings-row-title">Duration</div>
         <select id="timer-dur"><option value="60">60 s</option><option value="90" selected>90 s</option><option value="120">2 min</option><option value="180">3 min</option></select>
       </div>
     </div>
     <div class="set-section">
       <div class="set-label">Block</div>
-      <div class="set-row">
-        <div><div class="set-row-title">Block 1 · 12 weeks</div><div class="set-row-sub" id="week-label">Not started</div></div>
+      <div class="settings-row">
+        <div><div class="settings-row-title">Block 1 · 12 weeks</div><div class="settings-row-sub" id="week-label">Not started</div></div>
       </div>
     </div>
   </div>
 
   <nav class="nav">
-    <button class="nav-btn active" data-screen="today"><span class="nav-icon">☀️</span>Today</button>
-    <button class="nav-btn" data-screen="workout"><span class="nav-icon">◎</span>Workout</button>
-    <button class="nav-btn" data-screen="history"><span class="nav-icon">≡</span>History</button>
+    <button class="nav-btn active" data-screen="workout"><span class="nav-icon">◎</span>Workout</button>
+    <button class="nav-btn" data-screen="calendar"><span class="nav-icon">▦</span>Calendar</button>
     <button class="nav-btn" data-screen="settings"><span class="nav-icon">⚙</span>Settings</button>
   </nav>
 </div>
@@ -329,39 +402,62 @@ const PLAN = {
 
 const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_FULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let S = {
   timerOn: false, timerDur: 90,
   sheetId: "1uLPvp6hLbdh6ZLDSJ7ec1jb-ooFKPgBLKHZgoiMco0U",
   gConnected: false, blockStart: null,
-  session: null, history: [],
+  session: null,
+  history: [],  // [{dateKey:"2026-06-29", name, done, total, exercises:[...]}]
 };
-function load(){ try{ const r=localStorage.getItem("train2"); if(r) S={...S,...JSON.parse(r)}; }catch(e){} }
-function save(){ try{ localStorage.setItem("train2",JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const r=localStorage.getItem("train3"); if(r) S={...S,...JSON.parse(r)}; }catch(e){} }
+function save(){ try{ localStorage.setItem("train3",JSON.stringify(S)); }catch(e){} }
 
-// ── TIMER ──────────────────────────────────────────────────────────────────
-let tInterval=null, tSecs=0;
-function startTimer(){
-  if(!S.timerOn) return;
+// dateKey helpers
+function dateKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function todayKey(){ return dateKey(new Date()); }
+function getLog(key){ return S.history.find(h=>h.dateKey===key)||null; }
+
+// ── TIMER STATE ─────────────────────────────────────────────────────────────
+let tInterval=null, tSecs=0, tTotal=0, tPaused=false, tReturnScreen="workout", tExName="";
+const ARC_LEN = 2*Math.PI*88; // ~553
+
+function startTimerScreen(exName){
+  tExName=exName||"";
+  tSecs=S.timerDur; tTotal=S.timerDur; tPaused=false;
+  tReturnScreen="workout";
   clearInterval(tInterval);
-  tSecs=S.timerDur;
-  renderTimers();
-  tInterval=setInterval(()=>{ tSecs--; if(tSecs<=0){clearInterval(tInterval);tSecs=0;toast("Rest done ✓");} renderTimers(); },1000);
+  document.getElementById("timer-ex-name").textContent=tExName;
+  updateTimerDisplay();
+  goTo("timer");
+  tInterval=setInterval(timerTick,1000);
 }
-function renderTimers(){
+
+function timerTick(){
+  if(tPaused) return;
+  tSecs--;
+  if(tSecs<=0){ tSecs=0; clearInterval(tInterval); updateTimerDisplay(); setTimeout(()=>{ toast("Rest done ✓"); goTo(tReturnScreen); },600); return; }
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay(){
   const m=String(Math.floor(tSecs/60)).padStart(2,"0"), s=String(tSecs%60).padStart(2,"0");
-  document.querySelectorAll(".timer-val").forEach(el=>el.textContent=`${m}:${s}`);
+  const disp=document.getElementById("timer-display");
+  disp.textContent=`${m}:${s}`;
+  const pct=tTotal>0?tSecs/tTotal:0;
+  const arc=document.getElementById("timer-arc");
+  arc.setAttribute("stroke-dashoffset", String(ARC_LEN*(1-pct)));
+  // color
+  disp.className="timer-display"+(tSecs===0?" done-clr":tSecs<=10?" warn":"");
+  const pb=document.getElementById("timer-pause-btn");
+  if(pb) pb.textContent=tPaused?"▶":"⏸";
 }
-function fmtTimer(s){ return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`; }
 
 // ── TOAST ──────────────────────────────────────────────────────────────────
 let toastTO;
-function toast(msg){
-  const el=document.getElementById("toast");
-  el.textContent=msg; el.classList.add("show");
-  clearTimeout(toastTO); toastTO=setTimeout(()=>el.classList.remove("show"),2400);
-}
+function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastTO); toastTO=setTimeout(()=>el.classList.remove("show"),2400); }
 
 // ── NAVIGATION ─────────────────────────────────────────────────────────────
 function goTo(name){
@@ -370,114 +466,110 @@ function goTo(name){
   document.getElementById("screen-"+name).classList.add("active");
   const nb=document.querySelector(`[data-screen="${name}"]`);
   if(nb) nb.classList.add("active");
-  if(name==="today")    renderToday();
   if(name==="workout")  renderWorkout();
-  if(name==="history")  renderHistory();
+  if(name==="calendar") renderCalendar();
   if(name==="settings") renderSettings();
 }
 
-// ── TODAY ──────────────────────────────────────────────────────────────────
-function renderToday(){
-  const dow=new Date().getDay(), d=new Date();
-  const session=PLAN[dow];
-  document.getElementById("today-eyebrow").textContent=`${DAYS[dow]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
-
-  if(!session){
-    document.getElementById("today-title").textContent="Rest day";
-    document.getElementById("today-chips").innerHTML="";
-    document.getElementById("go-btn").style.display="none";
-    document.getElementById("today-preview").innerHTML=`<div style="color:var(--text3);font-size:14px;padding:20px 0">No session scheduled today.</div>`;
-    return;
-  }
-  document.getElementById("go-btn").style.display="flex";
-  document.getElementById("today-title").textContent=session.name;
-
-  const tagClass={strength:"chip-strength",climb:"chip-climb",cycle:"chip-cycle"}[session.tag]||"chip-strength";
-  document.getElementById("today-chips").innerHTML=
-    `<span class="chip ${tagClass}">${session.tag}</span><span class="chip chip-dur">${session.dur}</span>`;
-
-  document.getElementById("today-preview").innerHTML=session.ex.map(e=>`
-    <div class="preview-row">
-      <span class="preview-name">${e.n}</span>
-      ${e.tgt?`<span class="preview-target">${e.tgt}</span>`:""}
-    </div>`).join("");
-}
-
-// ── SESSION INIT ───────────────────────────────────────────────────────────
-function initSession(dow){
-  const p=PLAN[dow];
-  if(!p) return;
-  S.session={
-    dow, name:p.name, start:Date.now(),
-    exercises: p.ex.map(e=>({
-      n:e.n, tgt:e.tgt, t:e.t,
-      done:false, note:"", open:false,
-      sets: e.t==="sets" ? Array.from({length:e.ds},()=>({r:e.dr,w:e.dw,logged:false})) : []
-    }))
-  };
-  save();
-}
-
-// ── WORKOUT ────────────────────────────────────────────────────────────────
+// ── WORKOUT SCREEN ─────────────────────────────────────────────────────────
 function renderWorkout(){
-  const cs=S.session;
-  if(!cs){ document.getElementById("ex-list").innerHTML=`<div style="color:var(--text3);padding:20px 0;font-size:14px">No active session. Go to Today to start.</div>`; return; }
-  document.getElementById("wk-title").textContent=cs.name;
-  const done=cs.exercises.filter(e=>e.done).length, total=cs.exercises.length;
-  document.getElementById("progress-fill").style.width=`${total?(done/total*100):0}%`;
-  document.getElementById("progress-label").textContent=`${done} of ${total} complete`;
-  document.getElementById("finish-btn").disabled=done===0;
+  const idle=document.getElementById("wk-idle");
+  const active=document.getElementById("wk-active");
 
-  document.getElementById("ex-list").innerHTML=cs.exercises.map((ex,ei)=>{
-    let body="";
-    if(ex.t==="sets"){
-      const rows=ex.sets.map((st,si)=>`
-        <div class="set-row">
-          <span class="set-num">Set ${si+1}</span>
-          <input class="set-field${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}" data-f="r" value="${st.r}" placeholder="reps">
-          <span class="set-x">×</span>
-          <input class="set-field${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}" data-f="w" value="${st.w}" placeholder="wt" style="max-width:72px">
-          <button class="set-check${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}">✓</button>
-        </div>`).join("");
-      body=`<div class="sets-head">Sets — tap ✓ to log each set</div>${rows}
-        <button class="add-set" data-ei="${ei}">+ add set</button>
-        ${S.timerOn?`<div class="timer-strip"><button class="timer-btn" data-ei="${ei}">⏱ rest timer</button><span class="timer-val">${tSecs>0?fmtTimer(tSecs):"--:--"}</span></div>`:""}`;
-    } else {
-      body=`<textarea class="note-field" data-ei="${ei}" placeholder="log notes…" rows="2">${ex.note||""}</textarea>`;
+  if(!S.session){
+    // idle: show today's plan
+    idle.style.display="block"; active.style.display="none";
+    const dow=new Date().getDay(), d=new Date();
+    document.getElementById("wk-eyebrow").textContent=`${DAYS[dow]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+    const plan=PLAN[dow];
+    if(!plan){
+      document.getElementById("wk-today-title").textContent="Rest day";
+      document.getElementById("wk-chips").innerHTML="";
+      document.getElementById("start-btn").style.display="none";
+      document.getElementById("wk-preview").innerHTML=`<div style="color:var(--text3);font-size:14px;padding:20px 0">No session scheduled — enjoy the recovery.</div>`;
+      return;
     }
-    return `
-      <div class="ex-card${ex.done?" done":""}${ex.open?" open":""}" data-ei="${ei}">
-        <div class="ex-header" data-ei="${ei}">
-          <div class="ex-circle" data-circle="${ei}">${ex.done?"✓":""}</div>
-          <div class="ex-info">
-            <div class="ex-name">${ex.n}</div>
-            ${ex.tgt?`<div class="ex-tgt">${ex.tgt}</div>`:""}
-          </div>
-          <span class="ex-chevron">⌄</span>
-        </div>
-        <div class="ex-body">${body}</div>
-      </div>`;
-  }).join("");
+    document.getElementById("start-btn").style.display="flex";
+    document.getElementById("wk-today-title").textContent=plan.name;
+    const tagClass={strength:"chip-strength",climb:"chip-climb",cycle:"chip-cycle"}[plan.tag]||"chip-strength";
+    document.getElementById("wk-chips").innerHTML=`<span class="chip ${tagClass}">${plan.tag}</span><span class="chip chip-dur">${plan.dur}</span>`;
+    document.getElementById("wk-preview").innerHTML=plan.ex.map(e=>`
+      <div class="preview-row"><span class="preview-name">${e.n}</span>${e.tgt?`<span class="preview-target">${e.tgt}</span>`:""}</div>`).join("");
+  } else {
+    // active session
+    idle.style.display="none"; active.style.display="block";
+    const cs=S.session;
+    document.getElementById("wk-title").textContent=cs.name;
+    // context banner — show date + editing badge if not today
+    const todayK=dateKey(new Date());
+    const sesKey=cs.dateKey||todayK;
+    const existingBanner=document.getElementById("wk-context-banner");
+    if(existingBanner) existingBanner.remove();
+    if(sesKey!==todayK){
+      const [by,bm,bd]=sesKey.split("-").map(Number);
+      const bdate=new Date(by,bm-1,bd);
+      const bStr=`${DAYS[bdate.getDay()]}, ${MONTHS[bdate.getMonth()]} ${bd}, ${by}`;
+      const isPast=sesKey<todayK;
+      const banner=document.createElement("div");
+      banner.id="wk-context-banner";
+      banner.style.cssText="display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;margin-bottom:12px;font-size:12px;color:var(--text2);";
+      banner.innerHTML=`<span style="font-size:15px">${isPast?"📅":"📆"}</span><span>${isPast?"Logging past session":"Editing future session"}: <strong style="color:var(--text)">${bStr}</strong></span>`;
+      document.getElementById("wk-active").insertBefore(banner, document.getElementById("wk-active").firstChild);
+    }
+    const done=cs.exercises.filter(e=>e.done).length, total=cs.exercises.length;
+    document.getElementById("progress-fill").style.width=`${total?(done/total*100):0}%`;
+    document.getElementById("progress-label").textContent=`${done} of ${total} complete`;
+    document.getElementById("finish-btn").disabled=done===0;
 
-  // bind events
+    document.getElementById("ex-list").innerHTML=cs.exercises.map((ex,ei)=>{
+      let body="";
+      if(ex.t==="sets"){
+        const rows=ex.sets.map((st,si)=>`
+          <div class="set-row">
+            <span class="set-num">Set ${si+1}</span>
+            <input class="set-field${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}" data-f="r" value="${st.r}" placeholder="reps">
+            <span class="set-x">×</span>
+            <input class="set-field${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}" data-f="w" value="${st.w}" placeholder="wt" style="max-width:72px">
+            <button class="set-check${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}">✓</button>
+          </div>`).join("");
+        body=`<div class="sets-head">Sets — tap ✓ to log each set</div>${rows}
+          <button class="add-set" data-ei="${ei}">+ add set</button>
+          <div class="timer-trigger" data-ei="${ei}"><span class="timer-trigger-icon">⏱</span><span class="timer-trigger-label">Start rest timer</span></div>`;
+      } else {
+        body=`<textarea class="note-field" data-ei="${ei}" placeholder="log notes…" rows="2">${ex.note||""}</textarea>`;
+      }
+      return `
+        <div class="ex-card${ex.done?" done":""}${ex.open?" open":""}" data-ei="${ei}">
+          <div class="ex-header" data-ei="${ei}">
+            <div class="ex-circle" data-circle="${ei}">${ex.done?"✓":""}</div>
+            <div class="ex-info"><div class="ex-name">${ex.n}</div>${ex.tgt?`<div class="ex-tgt">${ex.tgt}</div>`:""}</div>
+            <span class="ex-chevron">⌄</span>
+          </div>
+          <div class="ex-body">${body}</div>
+        </div>`;
+    }).join("");
+
+    bindWorkoutEvents();
+  }
+}
+
+function bindWorkoutEvents(){
   document.querySelectorAll(".ex-header").forEach(h=>{
-    h.addEventListener("click", e=>{
-      if(e.target.closest("[data-circle]")) return; // circle handles its own click
+    h.addEventListener("click",e=>{
+      if(e.target.closest("[data-circle]")) return;
       const ei=parseInt(h.dataset.ei);
       S.session.exercises[ei].open=!S.session.exercises[ei].open;
       save(); renderWorkout();
     });
   });
-
   document.querySelectorAll("[data-circle]").forEach(c=>{
-    c.addEventListener("click", e=>{
+    c.addEventListener("click",e=>{
       e.stopPropagation();
       const ei=parseInt(c.dataset.circle);
       S.session.exercises[ei].done=!S.session.exercises[ei].done;
       save(); renderWorkout();
     });
   });
-
   document.querySelectorAll(".set-field").forEach(inp=>{
     inp.addEventListener("change",()=>{
       const ei=parseInt(inp.dataset.ei), si=parseInt(inp.dataset.si);
@@ -485,7 +577,6 @@ function renderWorkout(){
       save();
     });
   });
-
   document.querySelectorAll(".set-check").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const ei=parseInt(btn.dataset.ei), si=parseInt(btn.dataset.si);
@@ -493,11 +584,10 @@ function renderWorkout(){
       set.logged=!set.logged;
       if(S.session.exercises[ei].sets.every(s=>s.logged)) S.session.exercises[ei].done=true;
       save();
-      if(set.logged) startTimer();
-      renderWorkout();
+      if(set.logged && S.timerOn) startTimerScreen(S.session.exercises[ei].n);
+      else renderWorkout();
     });
   });
-
   document.querySelectorAll(".add-set").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const ei=parseInt(btn.dataset.ei);
@@ -506,7 +596,6 @@ function renderWorkout(){
       save(); renderWorkout();
     });
   });
-
   document.querySelectorAll(".note-field").forEach(ta=>{
     ta.addEventListener("input",()=>{
       const ei=parseInt(ta.dataset.ei);
@@ -515,36 +604,71 @@ function renderWorkout(){
       save();
     });
   });
-
-  document.querySelectorAll(".timer-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>startTimer());
+  document.querySelectorAll(".timer-trigger").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const ei=parseInt(el.dataset.ei);
+      startTimerScreen(S.session.exercises[ei].n);
+    });
   });
+}
+
+// ── SESSION INIT ───────────────────────────────────────────────────────────
+function initSession(dow){
+  initSessionForDate(dateKey(new Date()), dow);
+}
+
+function initSessionForDate(key, dow){
+  const p=PLAN[dow]; if(!p) return;
+  const log=getLog(key);
+  if(log){
+    S.session={
+      dow, name:p.name, start:Date.now(), dateKey:key, editing:true,
+      exercises:log.exercises.map(ex=>({
+        n:ex.n, tgt:ex.tgt, t:ex.t, done:ex.done, note:ex.note||"", open:false,
+        sets:ex.t==="sets"
+          ? (ex.sets.length
+              ? ex.sets.map(s=>({r:s.r,w:s.w,logged:true}))
+              : Array.from({length:p.ex.find(e=>e.n===ex.n)?.ds||3},()=>({r:"",w:"",logged:false})))
+          : []
+      }))
+    };
+  } else {
+    S.session={
+      dow, name:p.name, start:Date.now(), dateKey:key, editing:false,
+      exercises:p.ex.map(e=>({
+        n:e.n, tgt:e.tgt, t:e.t, done:false, note:"", open:false,
+        sets:e.t==="sets"?Array.from({length:e.ds},()=>({r:e.dr,w:e.dw,logged:false})):[]
+      }))
+    };
+  }
+  save();
 }
 
 // ── SUMMARY ────────────────────────────────────────────────────────────────
 function renderSummary(){
   const cs=S.session; if(!cs) return;
   const elapsed=Math.round((Date.now()-cs.start)/60000);
-  document.getElementById("sum-sub").textContent=`${cs.name} · ${elapsed} min`;
+  const dk=cs.dateKey||dateKey(new Date());
+  const [sy,sm,sd]=dk.split("-").map(Number);
+  const sdate=new Date(sy,sm-1,sd);
+  const dateLabel=dk===dateKey(new Date())?"Today":`${DAYS[sdate.getDay()]}, ${MONTHS[sdate.getMonth()]} ${sd}`;
+  document.getElementById("sum-sub").textContent=`${cs.name} · ${dateLabel} · ${elapsed} min`;
   document.getElementById("sum-list").innerHTML=cs.exercises.map(ex=>{
     if(!ex.done) return "";
     let detail="";
     if(ex.t==="sets"){
       const logged=ex.sets.filter(s=>s.logged);
       detail=logged.length?logged.map((s,i)=>`Set ${i+1}: ${s.r} × ${s.w}`).join("\n"):"completed";
-    } else {
-      detail=ex.note||"✓";
-    }
-    return `<div class="sum-ex">
-      <div class="sum-ex-name">✓ ${ex.n}</div>
-      <div class="sum-ex-detail">${detail.replace(/\n/g,"<br>")}</div>
-    </div>`;
+    } else { detail=ex.note||"✓"; }
+    return `<div class="sum-ex"><div class="sum-ex-name">✓ ${ex.n}</div><div class="sum-ex-detail">${detail.replace(/\n/g,"<br>")}</div></div>`;
   }).join("");
 }
 
 function buildPayload(){
-  const cs=S.session; const d=new Date();
-  const ds=`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+  const cs=S.session;
+  const dk=cs.dateKey||dateKey(new Date());
+  const [dy,dm,dd]=dk.split("-").map(Number);
+  const ds=`${dm}/${dd}/${dy}`;
   const notes=document.getElementById("sum-notes").value.trim();
   let lines=[`${ds} — ${cs.name}`];
   cs.exercises.forEach(ex=>{
@@ -552,9 +676,7 @@ function buildPayload(){
     if(ex.t==="sets"){
       const logged=ex.sets.filter(s=>s.logged);
       lines.push(`${ex.n}: ${logged.map(s=>`${s.r} × ${s.w}`).join(", ")} (target: ${ex.tgt})`);
-    } else {
-      lines.push(`${ex.n}: ${ex.note||"done"} (target: ${ex.tgt})`);
-    }
+    } else { lines.push(`${ex.n}: ${ex.note||"done"} (target: ${ex.tgt})`); }
   });
   if(notes) lines.push(`Notes: ${notes}`);
   return lines.join("\n");
@@ -572,28 +694,152 @@ async function doSave(){
     const out=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ").toLowerCase();
     if(out.includes("done")||out.includes("added")||out.includes("appended")||out.includes("written")){
       msg.className="save-msg ok"; msg.textContent="Saved to your Google Sheet ✓"; msg.style.display="block";
-      archive();
+      archiveSession();
     } else throw new Error();
   } catch(e){
     try{ await navigator.clipboard.writeText(text); }catch(_){}
     msg.className="save-msg err"; msg.textContent="Couldn't write directly — copied to clipboard. Paste into your 2025 tab."; msg.style.display="block";
-    archive();
+    archiveSession();
   }
   btn.disabled=false; btn.textContent="Save to Google Sheet";
 }
 
-function archive(){
+function archiveSession(){
   if(!S.session) return;
-  const d=new Date();
-  S.history.unshift({date:`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`,name:S.session.name,done:S.session.exercises.filter(e=>e.done).length,total:S.session.exercises.length});
+  const key=S.session.dateKey||dateKey(new Date());
+  const notes=document.getElementById("sum-notes")?document.getElementById("sum-notes").value.trim():"";
+  // store full exercise data for calendar detail view
+  const entry={
+    dateKey:key,
+    name:S.session.name,
+    tag:PLAN[S.session.dow]?.tag||"",
+    done:S.session.exercises.filter(e=>e.done).length,
+    total:S.session.exercises.length,
+    elapsed:Math.round((Date.now()-S.session.start)/60000),
+    notes,
+    exercises:S.session.exercises.map(ex=>({
+      n:ex.n, tgt:ex.tgt, t:ex.t, done:ex.done, note:ex.note,
+      sets:ex.sets.filter(s=>s.logged)
+    }))
+  };
+  // replace if same day
+  const idx=S.history.findIndex(h=>h.dateKey===key);
+  if(idx>=0) S.history[idx]=entry; else S.history.unshift(entry);
   S.session=null; save();
 }
 
-// ── HISTORY ────────────────────────────────────────────────────────────────
-function renderHistory(){
-  const el=document.getElementById("hist-list");
-  if(!S.history.length){ el.innerHTML=`<div class="hist-empty">No sessions logged yet.<br>Finish a workout to see it here.</div>`; return; }
-  el.innerHTML=S.history.map(h=>`<div class="hist-item"><div class="hist-date">${h.date}</div><div class="hist-name">${h.name}</div><div class="hist-count">${h.done}/${h.total} exercises</div></div>`).join("");
+// ── CALENDAR ───────────────────────────────────────────────────────────────
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+let calSelected=null;
+
+function renderCalendar(){
+  const title=document.getElementById("cal-month-title");
+  title.textContent=`${MONTHS_FULL[calMonth]} ${calYear}`;
+
+  const today=new Date(); const todayY=today.getFullYear(), todayM=today.getMonth(), todayD=today.getDate();
+  const firstDow=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const grid=document.getElementById("cal-grid");
+
+  let html="";
+  for(let i=0;i<firstDow;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const key=`${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dow=new Date(calYear,calMonth,d).getDay();
+    const hasPlan=PLAN[dow]!==undefined;
+    const log=getLog(key);
+    const isToday=calYear===todayY&&calMonth===todayM&&d===todayD;
+    const isPast=new Date(calYear,calMonth,d)<new Date(todayY,todayM,todayD);
+    const isFuture=new Date(calYear,calMonth,d)>new Date(todayY,todayM,todayD);
+    const isSelected=calSelected===key;
+
+    let cls="cal-day";
+    if(isToday) cls+=" today";
+    if(log) cls+=" logged has-session";
+    else if(hasPlan&&isFuture) cls+=" scheduled has-session";
+    else if(hasPlan&&isPast&&!log) cls+=" past-no-session has-session";
+    if(isSelected) cls+=" selected";
+
+    html+=`<div class="${cls}" data-key="${key}" data-d="${d}" data-dow="${dow}"><span class="cal-day-num">${d}</span><span class="cal-dot"></span></div>`;
+  }
+  grid.innerHTML=html;
+
+  grid.querySelectorAll(".cal-day:not(.empty)").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const key=el.dataset.key;
+      calSelected=calSelected===key?null:key;
+      renderCalendar();
+    });
+  });
+
+  renderCalendarDetail();
+}
+
+function renderCalendarDetail(){
+  const wrap=document.getElementById("cal-detail-wrap");
+  if(!calSelected){ wrap.innerHTML=""; return; }
+
+  const key=calSelected;
+  const [y,m,d]=key.split("-").map(Number);
+  const dow=new Date(y,m-1,d).getDay();
+  const dateStr=`${DAYS[dow]}, ${MONTHS[m-1]} ${d}, ${y}`;
+  const log=getLog(key);
+  const plan=PLAN[dow];
+  const todayK=dateKey(new Date());
+  const isFuture=key>todayK;
+  const isToday=key===todayK;
+
+  // Open workout button — shown for any day with a plan
+  const openBtn=plan?`<button class="cal-open-btn" data-key="${key}" data-dow="${dow}">${log?"Edit / resubmit workout":isToday?"Open today's workout":"Open workout"} →</button>`:"";
+
+  if(log){
+    const donePct=log.total?Math.round(log.done/log.total*100):0;
+    let exerciseRows=log.exercises.filter(e=>e.done).map(ex=>{
+      let val="";
+      if(ex.t==="sets"&&ex.sets.length) val=ex.sets.map((s,i)=>`${i+1}: ${s.r}×${s.w}`).join(" · ");
+      else if(ex.note) val=ex.note;
+      else val="✓";
+      return `<div class="cal-detail-row"><span class="cal-detail-ex">${ex.n}</span><span class="cal-detail-val">${val}</span></div>`;
+    }).join("");
+    wrap.innerHTML=`
+      <div class="cal-detail">
+        <div class="cal-detail-date">${dateStr}</div>
+        <div class="cal-detail-name">${log.name} <span style="font-size:12px;font-weight:400;color:var(--text3)">· ${log.elapsed} min · ${donePct}%</span></div>
+        <div id="cal-ex-rows">${exerciseRows}</div>
+        ${log.notes?`<div style="margin-top:10px;font-size:12px;color:var(--text3);font-style:italic">"${log.notes}"</div>`:""}
+        ${openBtn}
+      </div>`;
+  } else if(plan){
+    const tagClass={strength:"chip-strength",climb:"chip-climb",cycle:"chip-cycle"}[plan.tag]||"chip-strength";
+    let exRows=plan.ex.map(e=>`<div class="cal-future-ex"><span>${e.n}</span>${e.tgt?`<span class="cal-future-tgt">${e.tgt}</span>`:""}</div>`).join("");
+    const subtitle=isFuture?"":` <span style="font-size:12px;font-weight:400">— not logged</span>`;
+    wrap.innerHTML=`
+      <div class="cal-detail">
+        <div class="cal-detail-date">${dateStr}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <div class="cal-detail-name" style="margin-bottom:0">${plan.name}${subtitle}</div>
+          <span class="chip ${tagClass}" style="margin-bottom:2px">${plan.tag}</span>
+        </div>
+        ${exRows}
+        ${openBtn}
+      </div>`;
+  } else {
+    wrap.innerHTML=`
+      <div class="cal-detail">
+        <div class="cal-detail-date">${dateStr}</div>
+        <div class="cal-detail-name" style="color:var(--text3)">Rest day</div>
+      </div>`;
+  }
+
+  // bind open button
+  wrap.querySelectorAll(".cal-open-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const k=btn.dataset.key, dw=parseInt(btn.dataset.dow);
+      if(!S.blockStart){ S.blockStart=Date.now(); save(); }
+      initSessionForDate(k, dw);
+      goTo("workout");
+    });
+  });
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
@@ -610,20 +856,31 @@ function renderSettings(){
 
 // ── BOOT ───────────────────────────────────────────────────────────────────
 load();
-renderToday();
+renderWorkout();
 
 document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>goTo(btn.dataset.screen)));
 
-document.getElementById("go-btn").addEventListener("click",()=>{
+document.getElementById("start-btn").addEventListener("click",()=>{
   const dow=new Date().getDay();
   if(!S.blockStart){ S.blockStart=Date.now(); save(); }
   if(!S.session||S.session.dow!==dow) initSession(dow);
-  goTo("workout");
+  renderWorkout();
 });
 
 document.getElementById("finish-btn").addEventListener("click",()=>{ renderSummary(); goTo("summary"); });
 document.getElementById("save-btn").addEventListener("click",doSave);
 
+// timer controls
+document.getElementById("timer-pause-btn").addEventListener("click",()=>{ tPaused=!tPaused; updateTimerDisplay(); });
+document.getElementById("timer-reset-btn").addEventListener("click",()=>{ clearInterval(tInterval); tSecs=tTotal; tPaused=false; updateTimerDisplay(); tInterval=setInterval(timerTick,1000); });
+document.getElementById("timer-skip-btn").addEventListener("click",()=>{ clearInterval(tInterval); tSecs=0; updateTimerDisplay(); setTimeout(()=>goTo(tReturnScreen),300); });
+document.getElementById("timer-back-btn").addEventListener("click",()=>{ clearInterval(tInterval); goTo(tReturnScreen); });
+
+// calendar nav
+document.getElementById("cal-prev").addEventListener("click",()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} calSelected=null; renderCalendar(); });
+document.getElementById("cal-next").addEventListener("click",()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} calSelected=null; renderCalendar(); });
+
+// settings
 document.getElementById("timer-toggle").addEventListener("click",()=>{ S.timerOn=!S.timerOn; save(); renderSettings(); });
 document.getElementById("timer-dur").addEventListener("change",e=>{ S.timerDur=parseInt(e.target.value); save(); });
 document.getElementById("sheet-input").addEventListener("change",e=>{ S.sheetId=e.target.value.trim(); save(); });
