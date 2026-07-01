@@ -98,6 +98,8 @@
   .add-set { width: 100%; padding: 7px; background: none; border: 1px dashed var(--border2); border-radius: 8px; color: var(--text3); font-size: 12px; cursor: pointer; margin-top: 2px; }
   .add-set:active { background: var(--bg3); }
   .note-field { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; color: var(--text); font-family: -apple-system, sans-serif; outline: none; resize: none; min-height: 68px; line-height: 1.4; }
+  .select-field { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--text); font-family: -apple-system, sans-serif; outline: none; }
+  .select-field:focus { border-color: var(--olive); }
   .note-field:focus { border-color: var(--olive); }
 
   /* ── TIMER TRIGGER ── */
@@ -366,18 +368,15 @@ const PLAN = {
     {n:"Calf PT: Standing Triple Extension",    tgt:"3 sets × 5 reps", t:"note"},
     {n:"Wall-facing HS hold",    tgt:"5 × 15–30s", t:"note"},
     {n:"Pancake stretch",        tgt:"3 × 45s", t:"note"},
-    {n:"L-sit (parallettes)",    tgt:"4 × max hold", t:"note"},
-    {n:"Ring row (easy)",        tgt:"3 × 4 / BW", t:"sets", ds:3, dr:"4", dw:"BW"},
+    {n:"L sit",                  tgt:"4 × max hold", t:"note"},
+    {n:"Ring row",                tgt:"3 × 4 / BW", t:"sets", ds:3, dr:"4", dw:"BW"},
     {n:"Shoulder dislocates",    tgt:"2 × 10", t:"note"},
   ]},
-  4:{ name:"Climbing — power end.", tag:"climb", dur:"90–105 min", ex:[
-    {n:"Warmup climbing",   tgt:"15 min progressive", t:"note"},
-    {n:"Warmup routes",     tgt:"60–70% / 2–3 routes", t:"note"},
-    {n:"PE intervals",      tgt:"4 rounds · 4–6 on / 3–4 off", t:"note"},
-    {n:"Grade climbed",     tgt:"", t:"note"},
-    {n:"Rounds completed",  tgt:"target: 4", t:"note"},
-    {n:"Aerobic flush",     tgt:"15 min easy grade", t:"note"},
-    {n:"Cooldown stretch",  tgt:"10 min", t:"note"},
+  4:{ name:"Climbing (Endurance)", tag:"climb", dur:"90–105 min", ex:[
+    {n:"Workout type", tgt:"", t:"select", opts:["Easy boulders w/ 30 sec rests","Routes","ARC"]},
+    {n:"Time climbing", tgt:"", t:"note"},
+    {n:"Time overall", tgt:"", t:"note"},
+    {n:"Grade/difficulty", tgt:"", t:"note"},
   ]},
   5:{ name:"Strength B — lower", tag:"strength", dur:"65–75 min", ex:[
     {n:"Warm Up: Run/Walk",                     tgt:"", t:"note"},
@@ -394,15 +393,11 @@ const PLAN = {
     {n:"SL glute bridge — RIGHT",tgt:"3 × 8", t:"sets", ds:3, dr:"8", dw:"BW"},
     {n:"Nerve floss (pain-free)",tgt:"10 reps each side", t:"note"},
   ]},
-  6:{ name:"Climbing — ARC", tag:"climb", dur:"80–90 min", ex:[
-    {n:"Warmup traversing",       tgt:"10 min V0–V1", t:"note"},
-    {n:"Finger tendon warmup",    tgt:"5 min", t:"note"},
-    {n:"ARC set 1",               tgt:"20–25 min / RPE 2", t:"note"},
-    {n:"Rest",                    tgt:"10 min full recovery", t:"note"},
-    {n:"ARC set 2",               tgt:"20–25 min", t:"note"},
-    {n:"Grade used",              tgt:"2–3 below onsight", t:"note"},
-    {n:"Easy traversing flush",   tgt:"5 min", t:"note"},
-    {n:"Finger + forearm stretch",tgt:"5 min", t:"note"},
+  6:{ name:"Climbing (Endurance)", tag:"climb", dur:"80–90 min", ex:[
+    {n:"Workout type", tgt:"", t:"select", opts:["Easy boulders w/ 30 sec rests","Routes","ARC"]},
+    {n:"Time climbing", tgt:"", t:"note"},
+    {n:"Time overall", tgt:"", t:"note"},
+    {n:"Grade/difficulty", tgt:"", t:"note"},
   ]},
 };
 
@@ -541,6 +536,9 @@ function renderWorkout(){
         body=`<div class="sets-head">Sets — tap ✓ to log each set</div>${rows}
           <button class="add-set" data-ei="${ei}">+ add set</button>
           <div class="timer-trigger" data-ei="${ei}"><span class="timer-trigger-icon">⏱</span><span class="timer-trigger-label">Start rest timer</span></div>`;
+      } else if(ex.t==="select"){
+        const opts=(ex.opts||[]).map(o=>`<option value="${o}"${ex.note===o?" selected":""}>${o}</option>`).join("");
+        body=`<select class="select-field" data-ei="${ei}"><option value="">Select…</option>${opts}</select>`;
       } else {
         body=`<textarea class="note-field" data-ei="${ei}" placeholder="log notes…" rows="2">${ex.note||""}</textarea>`;
       }
@@ -610,6 +608,14 @@ function bindWorkoutEvents(){
       save();
     });
   });
+  document.querySelectorAll(".select-field").forEach(sel=>{
+    sel.addEventListener("change",()=>{
+      const ei=parseInt(sel.dataset.ei);
+      S.session.exercises[ei].note=sel.value;
+      S.session.exercises[ei].done=sel.value.trim().length>0;
+      save();
+    });
+  });
   document.querySelectorAll(".timer-trigger").forEach(el=>{
     el.addEventListener("click",()=>{
       const ei=parseInt(el.dataset.ei);
@@ -631,6 +637,7 @@ function initSessionForDate(key, dow){
       dow, name:p.name, start:Date.now(), dateKey:key, editing:true,
       exercises:log.exercises.map(ex=>({
         n:ex.n, tgt:ex.tgt, t:ex.t, done:ex.done, note:ex.note||"", open:false,
+        opts:p.ex.find(e=>e.n===ex.n)?.opts,
         sets:ex.t==="sets"
           ? (ex.sets.length
               ? ex.sets.map(s=>({r:s.r,w:s.w,logged:true}))
@@ -642,7 +649,7 @@ function initSessionForDate(key, dow){
     S.session={
       dow, name:p.name, start:Date.now(), dateKey:key, editing:false,
       exercises:p.ex.map(e=>({
-        n:e.n, tgt:e.tgt, t:e.t, done:false, note:"", open:false,
+        n:e.n, tgt:e.tgt, t:e.t, done:false, note:"", open:false, opts:e.opts,
         sets:e.t==="sets"?Array.from({length:e.ds},()=>({r:e.dr,w:e.dw,logged:false})):[]
       }))
     };
