@@ -102,34 +102,10 @@
   .select-field:focus { border-color: var(--olive); }
   .note-field:focus { border-color: var(--olive); }
 
-  /* ── TIMER TRIGGER ── */
-  .timer-trigger { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
-  .timer-trigger:active { opacity: .7; }
-  .timer-trigger-label { font-size: 12px; color: var(--text2); }
-  .timer-trigger-icon { font-size: 16px; }
-
   /* ── FINISH ── */
   .finish-btn { width: 100%; padding: 15px; background: var(--olive); color: var(--bg); font-size: 15px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; margin-top: 16px; letter-spacing: .02em; }
   .finish-btn:disabled { background: var(--bg3); color: var(--text3); }
   .finish-btn:active { opacity: .85; }
-
-  /* ── TIMER SCREEN ── */
-  .timer-screen-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 0; }
-  .timer-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
-  .timer-ex-name { font-size: 15px; color: var(--text2); margin-bottom: 36px; text-align: center; }
-  .timer-display { font-size: 80px; font-weight: 200; font-family: -apple-system, monospace; color: var(--sage); letter-spacing: .02em; line-height: 1; margin-bottom: 48px; }
-  .timer-display.warn { color: var(--warn); }
-  .timer-display.done-clr { color: var(--olive); }
-  .timer-ring { margin-bottom: 24px; }
-  .timer-controls { display: flex; gap: 16px; margin-bottom: 40px; }
-  .timer-ctrl-btn { width: 64px; height: 64px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .timer-ctrl-btn:active { opacity: .7; }
-  .timer-ctrl-btn.primary { background: var(--olive-dim); border-color: var(--olive); color: var(--sage); width: 72px; height: 72px; font-size: 26px; }
-  .timer-back-btn { padding: 10px 28px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 14px; cursor: pointer; }
-  .timer-back-btn:active { opacity: .7; }
-  .timer-progress-ring { position: relative; width: 200px; height: 200px; }
-  .timer-progress-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
-  .timer-progress-ring .timer-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 
   /* ── SUMMARY ── */
   .sum-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -240,30 +216,6 @@
     </div>
   </div>
 
-  <!-- TIMER (full-screen) -->
-  <div class="screen" id="screen-timer">
-    <div class="timer-screen-wrap">
-      <div class="timer-label">Rest Timer</div>
-      <div class="timer-ex-name" id="timer-ex-name"></div>
-      <div class="timer-progress-ring" id="timer-ring">
-        <svg width="200" height="200" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="6"/>
-          <circle id="timer-arc" cx="100" cy="100" r="88" fill="none" stroke="var(--olive)" stroke-width="6"
-            stroke-dasharray="553" stroke-dashoffset="0" stroke-linecap="round"/>
-        </svg>
-        <div class="timer-center">
-          <div class="timer-display" id="timer-display">01:30</div>
-        </div>
-      </div>
-      <div class="timer-controls">
-        <button class="timer-ctrl-btn" id="timer-reset-btn" title="Reset">↺</button>
-        <button class="timer-ctrl-btn primary" id="timer-pause-btn" title="Pause">⏸</button>
-        <button class="timer-ctrl-btn" id="timer-skip-btn" title="Skip">⏭</button>
-      </div>
-      <button class="timer-back-btn" id="timer-back-btn">← Back to workout</button>
-    </div>
-  </div>
-
   <!-- SUMMARY -->
   <div class="screen" id="screen-summary">
     <div class="sum-title">Session done</div>
@@ -298,17 +250,6 @@
       <div class="set-label">Google Sheets</div>
       <div class="settings-row-sub" style="margin-bottom:8px;color:var(--text3);font-size:12px">Paste your Apps Script webhook URL here</div>
       <input class="sheet-input" id="sheet-input" placeholder="https://script.google.com/macros/s/…/exec">
-    </div>
-    <div class="set-section">
-      <div class="set-label">Rest timer</div>
-      <div class="settings-row">
-        <div><div class="settings-row-title">Auto-start after each set</div><div class="settings-row-sub">Timer launches automatically when you log a set</div></div>
-        <button class="toggle" id="timer-toggle"></button>
-      </div>
-      <div class="settings-row" id="dur-row" style="display:none">
-        <div class="settings-row-title">Duration</div>
-        <select id="timer-dur"><option value="60">60 s</option><option value="90" selected>90 s</option><option value="120">2 min</option><option value="180">3 min</option></select>
-      </div>
     </div>
     <div class="set-section">
       <div class="set-label">Block</div>
@@ -407,7 +348,6 @@ const MONTHS_FULL=["January","February","March","April","May","June","July","Aug
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let S = {
-  timerOn: false, timerDur: 90,
   sheetId: "1uLPvp6hLbdh6ZLDSJ7ec1jb-ooFKPgBLKHZgoiMco0U",
   gConnected: false, blockStart: null,
   session: null,
@@ -420,41 +360,6 @@ function save(){ try{ localStorage.setItem("train3",JSON.stringify(S)); }catch(e
 function dateKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function todayKey(){ return dateKey(new Date()); }
 function getLog(key){ return S.history.find(h=>h.dateKey===key)||null; }
-
-// ── TIMER STATE ─────────────────────────────────────────────────────────────
-let tInterval=null, tSecs=0, tTotal=0, tPaused=false, tReturnScreen="workout", tExName="";
-const ARC_LEN = 2*Math.PI*88; // ~553
-
-function startTimerScreen(exName){
-  tExName=exName||"";
-  tSecs=S.timerDur; tTotal=S.timerDur; tPaused=false;
-  tReturnScreen="workout";
-  clearInterval(tInterval);
-  document.getElementById("timer-ex-name").textContent=tExName;
-  updateTimerDisplay();
-  goTo("timer");
-  tInterval=setInterval(timerTick,1000);
-}
-
-function timerTick(){
-  if(tPaused) return;
-  tSecs--;
-  if(tSecs<=0){ tSecs=0; clearInterval(tInterval); updateTimerDisplay(); setTimeout(()=>{ toast("Rest done ✓"); goTo(tReturnScreen); },600); return; }
-  updateTimerDisplay();
-}
-
-function updateTimerDisplay(){
-  const m=String(Math.floor(tSecs/60)).padStart(2,"0"), s=String(tSecs%60).padStart(2,"0");
-  const disp=document.getElementById("timer-display");
-  disp.textContent=`${m}:${s}`;
-  const pct=tTotal>0?tSecs/tTotal:0;
-  const arc=document.getElementById("timer-arc");
-  arc.setAttribute("stroke-dashoffset", String(ARC_LEN*(1-pct)));
-  // color
-  disp.className="timer-display"+(tSecs===0?" done-clr":tSecs<=10?" warn":"");
-  const pb=document.getElementById("timer-pause-btn");
-  if(pb) pb.textContent=tPaused?"▶":"⏸";
-}
 
 // ── TOAST ──────────────────────────────────────────────────────────────────
 let toastTO;
@@ -534,8 +439,7 @@ function renderWorkout(){
             <button class="set-check${st.logged?" logged":""}" data-ei="${ei}" data-si="${si}">✓</button>
           </div>`).join("");
         body=`<div class="sets-head">Sets — tap ✓ to log each set</div>${rows}
-          <button class="add-set" data-ei="${ei}">+ add set</button>
-          <div class="timer-trigger" data-ei="${ei}"><span class="timer-trigger-icon">⏱</span><span class="timer-trigger-label">Start rest timer</span></div>`;
+          <button class="add-set" data-ei="${ei}">+ add set</button>`;
       } else if(ex.t==="select"){
         const opts=(ex.opts||[]).map(o=>`<option value="${o}"${ex.note===o?" selected":""}>${o}</option>`).join("");
         body=`<select class="select-field" data-ei="${ei}"><option value="">Select…</option>${opts}</select>`;
@@ -588,8 +492,7 @@ function bindWorkoutEvents(){
       set.logged=!set.logged;
       if(S.session.exercises[ei].sets.every(s=>s.logged)) S.session.exercises[ei].done=true;
       save();
-      if(set.logged && S.timerOn) startTimerScreen(S.session.exercises[ei].n);
-      else renderWorkout();
+      renderWorkout();
     });
   });
   document.querySelectorAll(".add-set").forEach(btn=>{
@@ -614,12 +517,6 @@ function bindWorkoutEvents(){
       S.session.exercises[ei].note=sel.value;
       S.session.exercises[ei].done=sel.value.trim().length>0;
       save();
-    });
-  });
-  document.querySelectorAll(".timer-trigger").forEach(el=>{
-    el.addEventListener("click",()=>{
-      const ei=parseInt(el.dataset.ei);
-      startTimerScreen(S.session.exercises[ei].n);
     });
   });
 }
@@ -880,9 +777,6 @@ function renderCalendarDetail(){
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function renderSettings(){
-  document.getElementById("timer-toggle").className="toggle"+(S.timerOn?" on":"");
-  document.getElementById("dur-row").style.display=S.timerOn?"flex":"none";
-  document.getElementById("timer-dur").value=S.timerDur;
   document.getElementById("sheet-input").value=S.sheetId||"";
   if(S.blockStart){ const w=Math.ceil((Date.now()-S.blockStart)/(7*24*60*60*1000)); document.getElementById("week-label").textContent=`Week ${Math.min(w,12)} of 12`; }
 }
@@ -903,19 +797,11 @@ document.getElementById("start-btn").addEventListener("click",()=>{
 document.getElementById("finish-btn").addEventListener("click",()=>{ renderSummary(); goTo("summary"); });
 document.getElementById("save-btn").addEventListener("click",doSave);
 
-// timer controls
-document.getElementById("timer-pause-btn").addEventListener("click",()=>{ tPaused=!tPaused; updateTimerDisplay(); });
-document.getElementById("timer-reset-btn").addEventListener("click",()=>{ clearInterval(tInterval); tSecs=tTotal; tPaused=false; updateTimerDisplay(); tInterval=setInterval(timerTick,1000); });
-document.getElementById("timer-skip-btn").addEventListener("click",()=>{ clearInterval(tInterval); tSecs=0; updateTimerDisplay(); setTimeout(()=>goTo(tReturnScreen),300); });
-document.getElementById("timer-back-btn").addEventListener("click",()=>{ clearInterval(tInterval); goTo(tReturnScreen); });
-
 // calendar nav
 document.getElementById("cal-prev").addEventListener("click",()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} calSelected=null; renderCalendar(); });
 document.getElementById("cal-next").addEventListener("click",()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} calSelected=null; renderCalendar(); });
 
 // settings
-document.getElementById("timer-toggle").addEventListener("click",()=>{ S.timerOn=!S.timerOn; save(); renderSettings(); });
-document.getElementById("timer-dur").addEventListener("change",e=>{ S.timerDur=parseInt(e.target.value); save(); });
 document.getElementById("sheet-input").addEventListener("change",e=>{ S.sheetId=e.target.value.trim(); save(); });
 
 
