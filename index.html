@@ -201,6 +201,31 @@
   .discard-btn { width: 100%; padding: 12px; background: none; color: var(--text3); font-size: 13px; border: none; cursor: pointer; }
   .library summary { padding: 13px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; font-size: 14px; color: var(--text); cursor: pointer; margin-bottom: 6px; }
   .cal-detail { margin-bottom: 8px; }
+  .decision-card { background: #2A2014; border: 1px solid var(--warn); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .decision-title { font-size: 11px; color: var(--warn); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .decision-item, .pull-item { padding: 10px 0; border-top: 1px solid var(--border); }
+  .decision-title + .decision-item { border-top: none; padding-top: 0; }
+  .decision-name { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--text); margin-bottom: 8px; }
+  .decision-name span { font-size: 12px; color: var(--text3); flex-shrink: 0; }
+  .decision-actions, .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
+  .choice-details { display: contents; }
+  .choice-details > .move-row, .choice-details > .chip-row, .choice-details > .warning { flex-basis: 100%; }
+  .choice-btn { min-height: 38px; padding: 8px 13px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 9px; color: var(--text); font-size: 13px; cursor: pointer; list-style: none; }
+  summary.choice-btn::-webkit-details-marker { display: none; }
+  .choice-details[open] > summary.choice-btn { border-color: var(--olive); color: var(--sage); }
+  .plan-options { margin-top: 8px; }
+  .plan-options > summary { padding: 8px 2px; color: var(--text3); font-size: 13px; cursor: pointer; }
+  .pull-list { margin-top: 12px; }
+  .option-label { font-size: 11px; color: var(--text3); margin: 10px 0 5px; }
+  .option-label + .chip-row, .option-label + .move-row { margin-top: 0; }
+  .warning { font-size: 12px; line-height: 1.4; color: var(--warn); margin: 6px 0; }
+  .skip-line { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+  .session-card.skipped { opacity: .75; }
+  .session-card.skipped .session-name { text-decoration: line-through; color: var(--text3); }
+  .cal-day.needs { border-color: var(--warn); }
+  .cal-day.needs .cal-dot { background: var(--warn); }
+  .cal-day.skipped .cal-day-num { text-decoration: line-through; color: var(--text3); }
+  .cal-day.skipped .cal-dot { background: var(--text3); }
   .move-row { display: flex; gap: 8px; margin-top: 8px; }
   .move-btn { padding: 0 16px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 13px; cursor: pointer; }
   .sum-date { margin-bottom: 16px; }
@@ -303,7 +328,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="program.js?v=4"></script>
+<script src="program.js?v=5"></script>
 <script>
 const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -318,6 +343,7 @@ let S = {
   session: null,
   history: [],  // [{dateKey:"2026-06-29", pid, sid, blockId, name, tag, done, total, exercises:[...]}]
   moves: {},    // planned session id → date it was moved to
+  skips: {},    // planned session id → {reason}
 };
 function load(){
   try{ const r=localStorage.getItem("train3"); if(r) S={...S,...JSON.parse(r)}; }catch(e){}
@@ -361,7 +387,7 @@ function planSession(def,block,week,key){
         tgt:resolve(item.tgt,week,ctx)||"",
         how:[resolve(item.how,week,ctx),lib.how].filter(Boolean).join(" ")};
     });
-  return {pid:`${key}|${def.key}`,origKey:key,sid:def.key,blockId:block.id,name:resolve(def.name,week,ctx),tag:def.tag,dur:resolve(def.dur,week,ctx),optional:!!def.optional,exercises};
+  return {pid:`${key}|${def.key}`,origKey:key,sid:def.key,blockId:block.id,quickLog:!!def.quickLog,noMakeup:!!def.noMakeup,name:resolve(def.name,week,ctx),tag:def.tag,dur:resolve(def.dur,week,ctx),optional:!!def.optional,exercises};
 }
 function plannedOn(key){
   const block=blockFor(key); if(!block) return [];
@@ -378,6 +404,37 @@ function sessionsFor(key){
 function moveSession(pid,to){
   if(!S.moves) S.moves={};
   if(pid.split("|")[0]===to) delete S.moves[pid]; else S.moves[pid]=to;
+}
+function addDays(key,days){ const d=parseKey(key); d.setDate(d.getDate()+days); return dateKey(d); }
+function weekStart(key){ return addDays(key,-((parseKey(key).getDay()+6)%7)); }
+function planStatus(plan,key){
+  if(findLog(plan)) return "done";
+  if(S.skips?.[plan.pid]) return "skipped";
+  return key<todayKey()&&!plan.optional?"needs":"planned";
+}
+// The decision card covers this calendar week, Monday through yesterday.
+function pendingDecisions(){
+  const today=todayKey(), items=[];
+  for(let key=weekStart(today);key<today;key=addDays(key,1)){
+    sessionsFor(key).filter(plan=>planStatus(plan,key)==="needs").forEach(plan=>items.push({plan,key}));
+  }
+  return items;
+}
+function upcomingSessions(){
+  const today=todayKey(), items=[];
+  for(let i=1;i<=7;i++){
+    const key=addDays(today,i);
+    sessionsFor(key).filter(plan=>planStatus(plan,key)==="planned").forEach(plan=>items.push({plan,key}));
+  }
+  return items;
+}
+function recoveryWarnings(plan,to){
+  const block=blockFor(to)||blockFor(plan.origKey); if(!block?.recoveryRules) return [];
+  const others=key=>sessionsFor(key).filter(p=>p.pid!==plan.pid&&planStatus(p,key)!=="skipped").map(p=>p.sid);
+  return block.recoveryRules.filter(rule=>{
+    if(rule.first.includes(plan.sid)&&others(addDays(to,rule.gapDays)).some(id=>rule.then.includes(id))) return true;
+    return rule.then.includes(plan.sid)&&others(addDays(to,-rule.gapDays)).some(id=>rule.first.includes(id));
+  }).map(rule=>rule.message);
 }
 function shortDate(key){ const d=parseKey(key); return `${DAYS[d.getDay()].slice(0,3)}, ${MONTHS[d.getMonth()]} ${d.getDate()}`; }
 function getLogs(key){ return S.history.filter(h=>h.dateKey===key); }
@@ -418,32 +475,147 @@ function goTo(name){
 function chips(plan){
   return `<span class="chip ${TAG_CHIPS[plan.tag]||"chip-strength"}">${esc(plan.tag)}</span>${plan.dur?`<span class="chip chip-dur">${esc(plan.dur)}</span>`:""}${plan.optional?`<span class="chip chip-dur">Optional</span>`:""}${S.moves?.[plan.pid]?`<span class="chip chip-dur">Moved from ${esc(shortDate(plan.origKey))}</span>`:""}`;
 }
+const SKIP_REASONS=["Tired","Travel","Soreness","Busy"];
+function skipChoices(plan,key){
+  const attrs=`data-key="${key}" data-pid="${esc(plan.pid)}"`;
+  return `<div class="chip-row">${SKIP_REASONS.map(r=>`<button class="choice-btn" data-act="skip" data-reason="${r}" ${attrs}>${r}</button>`).join("")}<button class="choice-btn" data-act="skip" data-reason="" ${attrs}>No reason</button></div>`;
+}
+function moveControls(plan,key){
+  return `<div class="move-row">
+    <input class="log-field" type="date" value="${key}" aria-label="New date for ${esc(plan.name)}">
+    <button class="move-btn" data-act="move" data-key="${key}" data-pid="${esc(plan.pid)}">Move</button>
+  </div><div class="warning" hidden></div>`;
+}
+function planOptions(plan,key){
+  const today=todayKey(), defaultDate=key<today?key:addDays(today,-1);
+  return `<details class="plan-options"><summary>More options</summary>
+    <div class="option-label">Done on another date</div>
+    <div class="move-row">
+      <input class="log-field" type="date" value="${defaultDate}" aria-label="Date you did ${esc(plan.name)}">
+      <button class="move-btn" data-act="done-on" data-key="${key}" data-pid="${esc(plan.pid)}">Log</button>
+    </div>
+    ${plan.noMakeup?"":`<div class="option-label">Move</div>${moveControls(plan,key)}`}
+    <div class="option-label">Skip</div>
+    ${skipChoices(plan,key)}
+  </details>`;
+}
+function decisionCard(items){
+  if(!items.length) return "";
+  return `<div class="decision-card">
+    <div class="decision-title">Needs a decision</div>
+    ${items.map(({plan,key})=>`<div class="decision-item">
+      <div class="decision-name">${esc(plan.name)}<span>${esc(shortDate(key))}</span></div>
+      <div class="decision-actions">
+        <button class="choice-btn" data-act="did" data-key="${key}" data-pid="${esc(plan.pid)}">I did it</button>
+        ${plan.noMakeup?"":`<details class="choice-details"><summary class="choice-btn">Make up</summary>${moveControls(plan,key)}</details>`}
+        <details class="choice-details"><summary class="choice-btn">Skip</summary>${skipChoices(plan,key)}</details>
+      </div>
+    </div>`).join("")}
+  </div>`;
+}
 function renderIdle(){
   const key=todayKey(), d=new Date(), block=blockFor(key);
   document.getElementById("wk-eyebrow").textContent=`${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  const wrap=document.getElementById("wk-sessions");
   if(!block){
     document.getElementById("wk-today-title").textContent="Between blocks";
     document.getElementById("wk-block-line").textContent="";
-    document.getElementById("wk-sessions").innerHTML=`<div class="wk-empty">No block is scheduled for today.</div>`;
+    wrap.innerHTML=`<div class="wk-empty">No block is scheduled for today.</div>`;
     return;
   }
   const week=weekOf(block,key), light=block.lightWeeks.includes(week);
   document.getElementById("wk-today-title").textContent="Today";
   document.getElementById("wk-block-line").textContent=`${block.name} · Week ${week} of ${totalWeeks(block)}${light?" · Lighter":""}`;
-  const plans=sessionsFor(key);
   let previewShown=false;
-  document.getElementById("wk-sessions").innerHTML=plans.map(plan=>{
-    const logged=!!findLog(plan);
+  const cards=sessionsFor(key).map(plan=>{
+    const status=planStatus(plan,key);
+    if(status==="skipped") return skippedCard(plan,key);
+    const logged=status==="done";
     const showPreview=!logged&&!previewShown; if(showPreview) previewShown=true;
     const rows=showPreview?plan.exercises.map(e=>`<div class="preview-row"><span class="preview-name">${esc(e.n)}</span>${e.tgt?`<span class="preview-target">${esc(e.tgt)}</span>`:""}</div>`).join(""):"";
     return `<div class="session-card${logged?" logged":""}">
       <div class="session-name">${logged?"✓ ":""}${esc(plan.name)}</div>
       <div class="wk-chips">${chips(plan)}</div>
       ${rows}
-      <button class="start-btn" data-key="${key}" data-pid="${esc(plan.pid)}">${logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
+      <button class="start-btn" data-act="open" data-key="${key}" data-pid="${esc(plan.pid)}">${logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
+      ${logged?"":planOptions(plan,key)}
     </div>`;
   }).join("")||`<div class="wk-empty">No session scheduled.</div>`;
-  document.querySelectorAll("#wk-sessions .start-btn").forEach(btn=>btn.addEventListener("click",()=>openSession(btn.dataset.key,btn.dataset.pid)));
+  wrap.innerHTML=decisionCard(pendingDecisions())+cards+pullForwardList();
+}
+function skippedCard(plan,key){
+  const reason=S.skips[plan.pid]?.reason;
+  return `<div class="session-card skipped">
+    <div class="session-name">${esc(plan.name)}</div>
+    <div class="skip-line">Skipped${reason?` · ${esc(reason)}`:""}</div>
+    <button class="choice-btn" data-act="undo-skip" data-key="${key}" data-pid="${esc(plan.pid)}">Undo skip</button>
+  </div>`;
+}
+function pullForwardList(){
+  const items=upcomingSessions(), today=todayKey();
+  if(!items.length) return "";
+  return `<details class="plan-options pull-list"><summary>Do something else today</summary>
+    ${items.map(({plan,key})=>{
+      const warnings=recoveryWarnings(plan,today);
+      return `<div class="pull-item">
+        <div class="decision-name">${esc(plan.name)}<span>${esc(shortDate(key))}</span></div>
+        ${warnings.map(w=>`<div class="warning">${esc(w)}</div>`).join("")}
+        <button class="choice-btn" data-act="pull" data-key="${key}" data-pid="${esc(plan.pid)}">Do today</button>
+      </div>`;
+    }).join("")}
+  </details>`;
+}
+function findPlan(key,pid){ return sessionsFor(key).find(p=>p.pid===pid)||null; }
+function refreshScreens(){
+  if(document.getElementById("screen-calendar").classList.contains("active")) renderCalendar();
+  else renderWorkout();
+}
+function handleSessionAction(btn){
+  const {act,key,pid}=btn.dataset, plan=findPlan(key,pid); if(!plan) return;
+  if(act==="open") openSession(key,pid);
+  if(act==="did"){ if(plan.quickLog) quickLog(plan,key); else openSession(key,pid); }
+  if(act==="done-on"){
+    const to=btn.previousElementSibling.value; if(!to) return;
+    beginSession(sessionFromPlan(plan,key,to));
+  }
+  if(act==="pull") beginSession(sessionFromPlan(plan,key,todayKey()));
+  if(act==="skip") skipSession(plan,key,btn.dataset.reason);
+  if(act==="undo-skip"){ delete S.skips[pid]; save(); refreshScreens(); }
+  if(act==="move"){
+    const to=btn.previousElementSibling.value, warning=btn.parentElement.nextElementSibling;
+    if(!to||to===key) return;
+    const warnings=recoveryWarnings(plan,to);
+    if(warnings.length&&btn.dataset.armed!==to){
+      btn.dataset.armed=to; btn.textContent="Move anyway";
+      warning.textContent=warnings.join(" "); warning.hidden=false;
+      return;
+    }
+    moveSession(pid,to); delete S.skips?.[pid]; save();
+    toast(`Moved to ${shortDate(to)}`);
+    if(document.getElementById("screen-calendar").classList.contains("active")){
+      const date=parseKey(to);
+      calSelected=to; calYear=date.getFullYear(); calMonth=date.getMonth();
+    }
+    refreshScreens();
+  }
+}
+async function quickLog(plan,key){
+  const session=sessionFromPlan(plan,key);
+  session.exercises.forEach(ex=>{ ex.done=true; });
+  S.session=session;
+  const payload=sessionPayload(session,"");
+  archiveSession("");
+  refreshScreens();
+  toast((await postToSheet(payload))?"Logged and saved to Sheet":"Logged in Endure");
+}
+async function skipSession(plan,key,reason){
+  if(!S.skips) S.skips={};
+  S.skips[plan.pid]={reason};
+  save(); refreshScreens();
+  const [y,m,d]=key.split("-").map(Number), date=`${m}/${d}/${y}`;
+  const saved=await postToSheet({id:plan.pid,date,previousDate:date,name:plan.name,notes:"",
+    exercises:[{name:"Skipped",value:reason||"No reason given",target:""}]});
+  toast(saved?"Skipped and saved to Sheet":"Skipped in Endure");
 }
 
 function fieldHtml(ei,f,value,attrs){
@@ -645,9 +817,9 @@ function newExercise(e,key){
   }
   return base;
 }
-function sessionFromPlan(plan,key){
-  return {pid:plan.pid,origKey:plan.origKey,sid:plan.sid,blockId:plan.blockId,name:plan.name,tag:plan.tag,start:Date.now(),dateKey:key,sourceDate:key,editing:false,
-    exercises:plan.exercises.map(e=>newExercise(e,key))};
+function sessionFromPlan(plan,key,actualKey=key){
+  return {pid:plan.pid,origKey:plan.origKey,sid:plan.sid,blockId:plan.blockId,name:plan.name,tag:plan.tag,start:Date.now(),dateKey:actualKey,sourceDate:key,editing:false,
+    exercises:plan.exercises.map(e=>newExercise(e,actualKey))};
 }
 function sessionFromLog(log){
   const pid=pidOf(log);
@@ -716,16 +888,10 @@ function buildPayload(){
   return lines.join("\n");
 }
 
-async function doSave(){
-  const btn=document.getElementById("save-btn");
-  const msg=document.getElementById("save-msg");
-  if(!S.session){ goTo("workout"); return; }
-  btn.disabled=true; btn.textContent="Saving…"; msg.style.display="none";
-  const cs=S.session;
+function sessionPayload(cs,notes){
   const [dy,dm,dd]=(cs.dateKey||todayKey()).split("-").map(Number);
-  const notes=document.getElementById("sum-notes").value.trim();
   const [py,pm,pd]=(cs.sourceDate||cs.dateKey||todayKey()).split("-").map(Number);
-  const payload={
+  return {
     id:cs.pid||`${cs.sourceDate||cs.dateKey}|${cs.name}`,
     date:`${dm}/${dd}/${dy}`,
     previousDate:`${pm}/${pd}/${py}`,
@@ -733,31 +899,39 @@ async function doSave(){
     notes,
     exercises:cs.exercises.filter(e=>e.done).map(ex=>({name:ex.n,value:exerciseValue(ex),target:ex.tgt||""}))
   };
-  const webhookUrl=S.sheetId;
-  const fallback=async text=>{
-    try{ await navigator.clipboard.writeText(buildPayload()); }catch(_){}
-    msg.className="save-msg err"; msg.textContent=text; msg.style.display="block";
-  };
-  if(!webhookUrl||!webhookUrl.startsWith("https://script.google.com")){
-    await fallback("No webhook URL set in Settings — copied to clipboard instead.");
+}
+function hasWebhook(){ return !!S.sheetId&&S.sheetId.startsWith("https://script.google.com"); }
+async function postToSheet(payload){
+  if(!hasWebhook()) return false;
+  try{
+    // Apps Script requires no-cors for cross-origin POST from a PWA
+    await fetch(S.sheetId,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    // no-cors means we can't read the response — assume success if no network error
+    return true;
+  }catch(e){ return false; }
+}
+async function doSave(){
+  const btn=document.getElementById("save-btn");
+  const msg=document.getElementById("save-msg");
+  if(!S.session){ goTo("workout"); return; }
+  btn.disabled=true; btn.textContent="Saving…"; msg.style.display="none";
+  const notes=document.getElementById("sum-notes").value.trim();
+  const saved=await postToSheet(sessionPayload(S.session,notes));
+  if(saved){
+    msg.className="save-msg ok"; msg.textContent="Saved to Google Sheet ✓";
   } else {
-    try{
-      // Apps Script requires no-cors for cross-origin POST from a PWA
-      await fetch(webhookUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      // no-cors means we can't read the response — assume success if no network error
-      msg.className="save-msg ok"; msg.textContent="Saved to Google Sheet ✓"; msg.style.display="block";
-    } catch(e){
-      await fallback("Couldn't reach Google Sheet — copied to clipboard instead.");
-    }
+    try{ await navigator.clipboard.writeText(buildPayload()); }catch(_){}
+    msg.className="save-msg err";
+    msg.textContent=hasWebhook()?"Couldn't reach Google Sheet — copied to clipboard instead.":"No webhook URL set in Settings — copied to clipboard instead.";
   }
-  archiveSession();
+  msg.style.display="block";
+  archiveSession(notes);
   btn.disabled=false; btn.textContent="Back to today";
 }
 
-function archiveSession(){
+function archiveSession(notes=""){
   if(!S.session) return;
   const cs=S.session, key=cs.dateKey||todayKey();
-  const notes=document.getElementById("sum-notes")?document.getElementById("sum-notes").value.trim():"";
   const entry={
     dateKey:key, pid:cs.pid, sid:cs.sid, blockId:cs.blockId,
     name:cs.name, tag:cs.tag||"",
@@ -777,6 +951,7 @@ function archiveSession(){
     :S.history.findIndex(h=>h.dateKey===(cs.sourceDate||key)&&h.name===cs.name&&!pidOf(h));
   if(idx>=0) S.history[idx]=entry; else S.history.unshift(entry);
   if(cs.pid&&cs.origKey&&blockFor(cs.origKey)) moveSession(cs.pid,key);
+  if(cs.pid&&S.skips) delete S.skips[cs.pid];
   S.session=null; save();
 }
 
@@ -794,12 +969,14 @@ function renderCalendar(){
   for(let i=0;i<firstDow;i++) html+=`<div class="cal-day empty"></div>`;
   for(let d=1;d<=daysInMonth;d++){
     const key=`${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    const hasPlan=sessionsFor(key).length>0;
+    const plans=sessionsFor(key), hasPlan=plans.length>0;
     const logged=getLogs(key).length>0;
     let cls="cal-day";
     if(key===todayK) cls+=" today";
     if(logged) cls+=" logged has-session";
     else if(hasPlan&&key>todayK) cls+=" scheduled has-session";
+    else if(plans.length&&plans.every(plan=>planStatus(plan,key)==="skipped")) cls+=" skipped has-session";
+    else if(plans.some(plan=>planStatus(plan,key)==="needs")&&key>=weekStart(todayK)) cls+=" needs has-session";
     else if(hasPlan&&key<todayK) cls+=" past-no-session has-session";
     if(calSelected===key) cls+=" selected";
     html+=`<div class="${cls}" data-key="${key}"><span class="cal-day-num">${d}</span><span class="cal-dot"></span></div>`;
@@ -816,9 +993,11 @@ function renderCalendar(){
 
 function logDetail(log,idx){
   const donePct=log.total?Math.round(log.done/log.total*100):0;
+  const planned=pidOf(log)?.split("|")[0];
   const rows=(log.exercises||[]).filter(e=>e.done).map(ex=>`<div class="cal-detail-row"><span class="cal-detail-ex">${esc(ex.n)}</span><span class="cal-detail-val">${esc(exerciseValue(ex))}</span></div>`).join("");
   return `<div class="cal-detail">
     <div class="cal-detail-name">${esc(log.name)} <span style="font-size:12px;font-weight:400;color:var(--text3)">· ${log.elapsed} min · ${donePct}%</span></div>
+    ${planned&&planned!==log.dateKey&&blockFor(planned)?`<div class="skip-line">Planned for ${esc(shortDate(planned))}</div>`:""}
     ${rows}
     ${log.notes?`<div style="margin-top:10px;font-size:12px;color:var(--text3);font-style:italic">"${esc(log.notes)}"</div>`:""}
     <button class="cal-open-btn" data-log="${idx}">Edit / resubmit workout →</button>
@@ -835,37 +1014,21 @@ function renderCalendarDetail(){
   plans.forEach(plan=>{
     const log=findLog(plan);
     if(log){ usedLogs.add(log); html+=logDetail(log,S.history.indexOf(log)); return; }
+    if(planStatus(plan,key)==="skipped"){ html+=skippedCard(plan,key); return; }
     const rows=plan.exercises.map(e=>`<div class="cal-future-ex"><span>${esc(e.n)}</span>${e.tgt?`<span class="cal-future-tgt">${esc(e.tgt)}</span>`:""}</div>`).join("");
     html+=`<div class="cal-detail">
       <div class="cal-detail-head"><div class="cal-detail-name" style="margin-bottom:0">${esc(plan.name)}${key<todayK?` <span style="font-size:12px;font-weight:400">— not logged</span>`:""}</div></div>
       <div class="wk-chips">${chips(plan)}</div>
       ${rows}
-      <button class="cal-open-btn" data-key="${key}" data-pid="${esc(plan.pid)}">${key===todayK?"Open today's workout":"Open workout"} →</button>
-      <div class="move-row">
-        <input class="log-field" type="date" value="${key}" aria-label="New date for ${esc(plan.name)}">
-        <button class="move-btn" data-pid="${esc(plan.pid)}">Move</button>
-      </div>
+      <button class="cal-open-btn" data-act="open" data-key="${key}" data-pid="${esc(plan.pid)}">${key===todayK?"Open today's workout":"Open workout"} →</button>
+      ${planOptions(plan,key)}
     </div>`;
   });
   logs.filter(log=>!usedLogs.has(log)).forEach(log=>{ html+=logDetail(log,S.history.indexOf(log)); });
   if(!plans.length&&!logs.length) html+=`<div class="cal-detail"><div class="cal-detail-name" style="color:var(--text3);margin-bottom:0">Nothing scheduled</div></div>`;
   wrap.innerHTML=html;
-  wrap.querySelectorAll(".cal-open-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      if(btn.dataset.log!==undefined) beginSession(sessionFromLog(S.history[parseInt(btn.dataset.log)]));
-      else openSession(btn.dataset.key,btn.dataset.pid);
-    });
-  });
-  wrap.querySelectorAll(".move-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const to=btn.previousElementSibling.value;
-      if(!to||to===calSelected) return;
-      moveSession(btn.dataset.pid,to); save();
-      const date=parseKey(to);
-      calSelected=to; calYear=date.getFullYear(); calMonth=date.getMonth();
-      toast(`Moved to ${shortDate(to)}`);
-      renderCalendar();
-    });
+  wrap.querySelectorAll("[data-log]").forEach(btn=>{
+    btn.addEventListener("click",()=>beginSession(sessionFromLog(S.history[parseInt(btn.dataset.log)])));
   });
 }
 
@@ -894,6 +1057,12 @@ document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",
 
 document.getElementById("finish-btn").addEventListener("click",()=>{ renderSummary(); goTo("summary"); });
 document.getElementById("save-btn").addEventListener("click",doSave);
+["wk-sessions","cal-detail-wrap"].forEach(id=>{
+  document.getElementById(id).addEventListener("click",e=>{
+    const btn=e.target.closest("button[data-act]");
+    if(btn) handleSessionAction(btn);
+  });
+});
 document.getElementById("sum-date").addEventListener("change",e=>{
   if(!S.session||!e.target.value) return;
   S.session.dateKey=e.target.value; save(); renderSummaryTitle();

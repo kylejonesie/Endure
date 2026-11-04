@@ -137,7 +137,7 @@ const CALF_PT = [
   {id:"triple-ext",  tgt:"3 × 5"},
 ];
 const ABRAHANGS = {
-  key:"abrahangs", name:"Abrahangs", tag:"fingers",
+  key:"abrahangs", name:"Abrahangs", tag:"fingers", quickLog:true, noMakeup:true,
   dur:week => week <= 2 ? "6 min" : "10 min",
   items:[{id:"abrahangs",
     tgt:week => week <= 2 ? "12 hangs" : "20 hangs",
@@ -150,6 +150,12 @@ const BLOCK_2 = {
   start:"2026-11-02",
   end:"2027-01-24",
   lightWeeks:[4, 8, 12],
+  recoveryRules:[
+    {first:["long-z2", "easy-bike", "hiit"], then:["gym-legs"], gapDays:1,
+     message:"Legs need at least 24 hours after Zone 2 or HIIT."},
+    {first:["abrahangs"], then:["climb-arc", "climb-intervals", "outdoor"], gapDays:0,
+     message:"Keep Abrahangs and climbing at least 6 hours apart."},
+  ],
   days:{
     1:[
       {key:"gym-pull", name:"Gym — Pull", tag:"strength", dur:"≤ 60 min", items:[
