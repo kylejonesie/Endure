@@ -58,6 +58,7 @@
   .start-btn:active { opacity: .8; }
   .go-arrow { font-size: 18px; }
 
+  .back-btn { background: none; border: none; color: var(--text2); font-size: 14px; padding: 2px 0 10px; cursor: pointer; }
   .section-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
   .preview-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; background: var(--bg2); border-radius: 9px; margin-bottom: 5px; border: 1px solid var(--border); }
   .preview-name { font-size: 13px; color: var(--text); }
@@ -259,6 +260,7 @@
     <!-- active session -->
     <div id="wk-active" style="display:none">
       <div class="wk-header">
+        <button class="back-btn" id="back-btn">← Today</button>
         <div class="wk-title" id="wk-title"></div>
         <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
         <div class="progress-label" id="progress-label"></div>
@@ -341,6 +343,7 @@ let S = {
   sheetId: "",
   gConnected: false, blockStart: null,
   session: null,
+  paused: [],   // open sessions set aside, with their entries
   history: [],  // [{dateKey:"2026-06-29", pid, sid, blockId, name, tag, done, total, exercises:[...]}]
   moves: {},    // planned session id → date it was moved to
   skips: {},    // planned session id → {reason}
@@ -513,6 +516,17 @@ function decisionCard(items){
     </div>`).join("")}
   </div>`;
 }
+// Paused sessions from other days would otherwise have no card to resume from.
+function draftCards(todays){
+  return (S.paused||[]).filter(s=>!todays.some(p=>p.pid===s.pid)).map(s=>{
+    const i=S.paused.indexOf(s);
+    return `<div class="session-card">
+      <div class="session-name">${esc(s.name)}</div>
+      <div class="wk-chips"><span class="chip chip-dur">In progress · ${esc(shortDate(s.dateKey))}</span></div>
+      <button class="start-btn" data-act="resume" data-idx="${i}">Resume <span class="go-arrow">→</span></button>
+    </div>`;
+  }).join("");
+}
 function renderIdle(){
   const key=todayKey(), d=new Date(), block=blockFor(key);
   document.getElementById("wk-eyebrow").textContent=`${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
@@ -526,22 +540,20 @@ function renderIdle(){
   const week=weekOf(block,key), light=block.lightWeeks.includes(week);
   document.getElementById("wk-today-title").textContent="Today";
   document.getElementById("wk-block-line").textContent=`${block.name} · Week ${week} of ${totalWeeks(block)}${light?" · Lighter":""}`;
-  let previewShown=false;
   const cards=sessionsFor(key).map(plan=>{
     const status=planStatus(plan,key);
     if(status==="skipped") return skippedCard(plan,key);
     const logged=status==="done";
-    const showPreview=!logged&&!previewShown; if(showPreview) previewShown=true;
-    const rows=showPreview?plan.exercises.map(e=>`<div class="preview-row"><span class="preview-name">${esc(e.n)}</span>${e.tgt?`<span class="preview-target">${esc(e.tgt)}</span>`:""}</div>`).join(""):"";
+    const rows=!logged?plan.exercises.map(e=>`<div class="preview-row"><span class="preview-name">${esc(e.n)}</span>${e.tgt?`<span class="preview-target">${esc(e.tgt)}</span>`:""}</div>`).join(""):"";
     return `<div class="session-card${logged?" logged":""}">
       <div class="session-name">${logged?"✓ ":""}${esc(plan.name)}</div>
       <div class="wk-chips">${chips(plan)}</div>
       ${rows}
-      <button class="start-btn" data-act="open" data-key="${key}" data-pid="${esc(plan.pid)}">${logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
+      <button class="start-btn" data-act="open" data-key="${key}" data-pid="${esc(plan.pid)}">${draftFor(plan.pid)?"Resume":logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
       ${logged?"":planOptions(plan,key)}
     </div>`;
   }).join("")||`<div class="wk-empty">No session scheduled.</div>`;
-  wrap.innerHTML=decisionCard(pendingDecisions())+cards+pullForwardList();
+  wrap.innerHTML=draftCards(sessionsFor(key))+decisionCard(pendingDecisions())+cards+pullForwardList();
 }
 function skippedCard(plan,key){
   const reason=S.skips[plan.pid]?.reason;
@@ -571,9 +583,11 @@ function refreshScreens(){
   else renderWorkout();
 }
 function handleSessionAction(btn){
-  const {act,key,pid}=btn.dataset, plan=findPlan(key,pid); if(!plan) return;
+  const {act,key,pid}=btn.dataset;
+  if(act==="resume"){ beginSession(S.paused[parseInt(btn.dataset.idx)]); return; }
+  const plan=findPlan(key,pid); if(!plan) return;
   if(act==="open") openSession(key,pid);
-  if(act==="did"){ if(plan.quickLog) quickLog(plan,key); else openSession(key,pid); }
+  if(act==="did"){ if(plan.quickLog&&!draftFor(pid)) quickLog(plan,key); else openSession(key,pid); }
   if(act==="done-on"){
     const to=btn.previousElementSibling.value; if(!to) return;
     beginSession(sessionFromPlan(plan,key,to));
@@ -600,6 +614,7 @@ function handleSessionAction(btn){
   }
 }
 async function quickLog(plan,key){
+  pauseSession();
   const session=sessionFromPlan(plan,key);
   session.exercises.forEach(ex=>{ ex.done=true; });
   S.session=session;
@@ -609,6 +624,7 @@ async function quickLog(plan,key){
   toast((await postToSheet(payload))?"Logged and saved to Sheet":"Logged in Endure");
 }
 async function skipSession(plan,key,reason){
+  dropDraft(plan.pid);
   if(!S.skips) S.skips={};
   S.skips[plan.pid]={reason};
   save(); refreshScreens();
@@ -834,8 +850,30 @@ function sessionFromLog(log){
     }))};
 }
 function beginSession(session){
-  if(S.session){ toast("Finish or discard the open session first"); goTo("workout"); return; }
-  S.session=session; save(); goTo("workout");
+  const id=sessionId(session);
+  if(S.session&&sessionId(S.session)===id){ goTo("workout"); return; }
+  pauseSession();
+  const i=S.paused.findIndex(s=>sessionId(s)===id);
+  if(i>=0){
+    const draft=S.paused.splice(i,1)[0];
+    draft.dateKey=session.dateKey;
+    S.session=draft;
+  } else S.session=session;
+  save(); goTo("workout");
+  document.getElementById("screen-workout").scrollTop=0;
+}
+function sessionId(s){ return s.pid||`${s.sourceDate||s.dateKey}|${s.name}`; }
+// Open sessions stay paused with their entries until finished or discarded.
+function pauseSession(){
+  if(!S.paused) S.paused=[];
+  if(S.session){ S.paused.push(S.session); S.session=null; save(); }
+}
+function draftFor(pid){
+  return [S.session,...(S.paused||[])].find(s=>s&&s.pid===pid)||null;
+}
+function dropDraft(pid){
+  if(S.session?.pid===pid) S.session=null;
+  S.paused=(S.paused||[]).filter(s=>s.pid!==pid);
 }
 function openSession(key,pid){
   const plan=sessionsFor(key).find(p=>p.pid===pid); if(!plan) return;
@@ -1068,6 +1106,7 @@ document.getElementById("sum-date").addEventListener("change",e=>{
   S.session.dateKey=e.target.value; save(); renderSummaryTitle();
 });
 
+document.getElementById("back-btn").addEventListener("click",()=>{ pauseSession(); renderWorkout(); document.getElementById("screen-workout").scrollTop=0; });
 document.getElementById("discard-btn").addEventListener("click",e=>{
   if(!discardArmed){ discardArmed=true; e.target.textContent="Tap again to discard"; return; }
   S.session=null; save(); renderWorkout();
