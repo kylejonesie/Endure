@@ -12,17 +12,29 @@
 
 const SHEET_NAME = "Log";
 
+const ID_COLUMN = 7;
+
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
-  const sheet = getOrCreateSheet();
-  const exercises = data.exercises || [];
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
 
-  if (exercises.length === 0) {
-    sheet.appendRow([data.date, data.name, "", "", "", data.notes || ""]);
-  } else {
-    exercises.forEach(function (ex) {
-      sheet.appendRow([data.date, data.name, ex.name, ex.value, ex.target, data.notes || ""]);
-    });
+  try {
+    const sheet = getOrCreateSheet();
+    const exercises = data.exercises || [];
+    const id = data.id || "";
+
+    removeSessionRows(sheet, data);
+
+    if (exercises.length === 0) {
+      sheet.appendRow([data.date, data.name, "", "", "", data.notes || "", id]);
+    } else {
+      exercises.forEach(function (ex) {
+        sheet.appendRow([data.date, data.name, ex.name, ex.value, ex.target, data.notes || "", id]);
+      });
+    }
+  } finally {
+    lock.releaseLock();
   }
 
   return ContentService
@@ -30,12 +42,37 @@ function doPost(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// Removes this session's earlier rows so a resubmission overwrites them.
+// Rows saved before session IDs existed are matched on date and workout name.
+function removeSessionRows(sheet, data) {
+  if (!data.id) return;
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, ID_COLUMN).getValues();
+  const previousDate = data.previousDate || data.date;
+
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const rowId = rows[i][ID_COLUMN - 1];
+    const legacyMatch = !rowId && rows[i][1] === data.name && sameDate(rows[i][0], previousDate);
+    if (rowId === data.id || legacyMatch) sheet.deleteRow(i + 2);
+  }
+}
+
+function sameDate(cell, text) {
+  const value = cell instanceof Date
+    ? (cell.getMonth() + 1) + "/" + cell.getDate() + "/" + cell.getFullYear()
+    : String(cell);
+  return value === text;
+}
+
 function getOrCreateSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["Date", "Workout", "Exercise", "Value", "Target", "Notes"]);
+    sheet.appendRow(["Date", "Workout", "Exercise", "Value", "Target", "Notes", "Session ID"]);
   }
+  if (!sheet.getRange(1, ID_COLUMN).getValue()) sheet.getRange(1, ID_COLUMN).setValue("Session ID");
   return sheet;
 }

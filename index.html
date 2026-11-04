@@ -201,6 +201,13 @@
   .discard-btn { width: 100%; padding: 12px; background: none; color: var(--text3); font-size: 13px; border: none; cursor: pointer; }
   .library summary { padding: 13px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 11px; font-size: 14px; color: var(--text); cursor: pointer; margin-bottom: 6px; }
   .cal-detail { margin-bottom: 8px; }
+  .move-row { display: flex; gap: 8px; margin-top: 8px; }
+  .move-btn { padding: 0 16px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 13px; cursor: pointer; }
+  .sum-date { margin-bottom: 16px; }
+  .log-field[type="date"] { -webkit-appearance: none; appearance: none; min-height: 42px; }
+
+  /* iOS Safari zooms into any field with text under 16px. */
+  input, textarea, select { font-size: 16px !important; }
   .cal-detail-date { margin-top: 4px; }
 
   /* ── TOAST ── */
@@ -241,6 +248,7 @@
   <div class="screen" id="screen-summary">
     <div class="sum-title">Session done</div>
     <div class="sum-sub" id="sum-sub"></div>
+    <label class="field-wrap sum-date"><span>Session date</span><input class="log-field" type="date" id="sum-date"></label>
     <div id="sum-list"></div>
     <div class="sum-notes-label">Session notes</div>
     <textarea class="sum-notes" id="sum-notes" placeholder="How did it feel? PRs, anything to flag…"></textarea>
@@ -295,7 +303,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="program.js?v=2"></script>
+<script src="program.js?v=3"></script>
 <script>
 const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -307,9 +315,17 @@ let S = {
   sheetId: "",
   gConnected: false, blockStart: null,
   session: null,
-  history: [],  // [{dateKey:"2026-06-29", sid, blockId, name, tag, done, total, exercises:[...]}]
+  history: [],  // [{dateKey:"2026-06-29", pid, sid, blockId, name, tag, done, total, exercises:[...]}]
+  moves: {},    // planned session id → date it was moved to
 };
-function load(){ try{ const r=localStorage.getItem("train3"); if(r) S={...S,...JSON.parse(r)}; }catch(e){} }
+function load(){
+  try{ const r=localStorage.getItem("train3"); if(r) S={...S,...JSON.parse(r)}; }catch(e){}
+  const cs=S.session;
+  if(cs){
+    cs.sourceDate=cs.sourceDate||cs.dateKey;
+    if(cs.sid&&!cs.pid) cs.pid=`${cs.dateKey}|${cs.sid}`;
+  }
+}
 function save(){ try{ localStorage.setItem("train3",JSON.stringify(S)); }catch(e){} }
 
 function esc(v){ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -330,6 +346,9 @@ function completedBefore(block,key,sid,field,value){
     &&!block.lightWeeks.includes(weekOf(block,h.dateKey))
     &&h.exercises.some(e=>e.vals&&e.vals[field]===value)).length;
 }
+// A planned session keeps one id, built from its original date, wherever it moves.
+function pidOf(log){ return log.pid||(log.sid?`${log.dateKey}|${log.sid}`:null); }
+function findLog(plan){ return S.history.find(h=>pidOf(h)===plan.pid)||null; }
 function planSession(def,block,week,key){
   const ctx={week,key,completed:(sid,field,value)=>completedBefore(block,key,sid,field,value)};
   const exercises=def.items
@@ -341,15 +360,26 @@ function planSession(def,block,week,key){
         tgt:resolve(item.tgt,week,ctx)||"",
         how:[resolve(item.how,week,ctx),lib.how].filter(Boolean).join(" ")};
     });
-  return {sid:def.key,blockId:block.id,name:resolve(def.name,week,ctx),tag:def.tag,dur:resolve(def.dur,week,ctx),optional:!!def.optional,exercises};
+  return {pid:`${key}|${def.key}`,origKey:key,sid:def.key,blockId:block.id,name:resolve(def.name,week,ctx),tag:def.tag,dur:resolve(def.dur,week,ctx),optional:!!def.optional,exercises};
 }
-function sessionsFor(key){
+function plannedOn(key){
   const block=blockFor(key); if(!block) return [];
   const week=weekOf(block,key);
   return (block.days[parseKey(key).getDay()]||[]).map(def=>planSession(def,block,week,key));
 }
+function sessionsFor(key){
+  const moves=S.moves||{};
+  const own=plannedOn(key).filter(plan=>!moves[plan.pid]);
+  const movedIn=Object.keys(moves).filter(pid=>moves[pid]===key)
+    .map(pid=>plannedOn(pid.split("|")[0]).find(plan=>plan.pid===pid)).filter(Boolean);
+  return [...own,...movedIn];
+}
+function moveSession(pid,to){
+  if(!S.moves) S.moves={};
+  if(pid.split("|")[0]===to) delete S.moves[pid]; else S.moves[pid]=to;
+}
+function shortDate(key){ const d=parseKey(key); return `${DAYS[d.getDay()].slice(0,3)}, ${MONTHS[d.getMonth()]} ${d.getDate()}`; }
 function getLogs(key){ return S.history.filter(h=>h.dateKey===key); }
-function logMatches(h,key,sid,name){ return h.dateKey===key&&(h.sid?h.sid===sid:h.name===name); }
 
 // Every gym session in every week must have a core exercise.
 function validateBlock(block){
@@ -385,7 +415,7 @@ function goTo(name){
 
 // ── WORKOUT SCREEN ─────────────────────────────────────────────────────────
 function chips(plan){
-  return `<span class="chip ${TAG_CHIPS[plan.tag]||"chip-strength"}">${esc(plan.tag)}</span>${plan.dur?`<span class="chip chip-dur">${esc(plan.dur)}</span>`:""}${plan.optional?`<span class="chip chip-dur">Optional</span>`:""}`;
+  return `<span class="chip ${TAG_CHIPS[plan.tag]||"chip-strength"}">${esc(plan.tag)}</span>${plan.dur?`<span class="chip chip-dur">${esc(plan.dur)}</span>`:""}${plan.optional?`<span class="chip chip-dur">Optional</span>`:""}${S.moves?.[plan.pid]?`<span class="chip chip-dur">Moved from ${esc(shortDate(plan.origKey))}</span>`:""}`;
 }
 function renderIdle(){
   const key=todayKey(), d=new Date(), block=blockFor(key);
@@ -399,20 +429,20 @@ function renderIdle(){
   const week=weekOf(block,key), light=block.lightWeeks.includes(week);
   document.getElementById("wk-today-title").textContent="Today";
   document.getElementById("wk-block-line").textContent=`${block.name} · Week ${week} of ${totalWeeks(block)}${light?" · Lighter":""}`;
-  const plans=sessionsFor(key), logs=getLogs(key);
+  const plans=sessionsFor(key);
   let previewShown=false;
   document.getElementById("wk-sessions").innerHTML=plans.map(plan=>{
-    const logged=logs.some(h=>logMatches(h,key,plan.sid,plan.name));
+    const logged=!!findLog(plan);
     const showPreview=!logged&&!previewShown; if(showPreview) previewShown=true;
     const rows=showPreview?plan.exercises.map(e=>`<div class="preview-row"><span class="preview-name">${esc(e.n)}</span>${e.tgt?`<span class="preview-target">${esc(e.tgt)}</span>`:""}</div>`).join(""):"";
     return `<div class="session-card${logged?" logged":""}">
       <div class="session-name">${logged?"✓ ":""}${esc(plan.name)}</div>
       <div class="wk-chips">${chips(plan)}</div>
       ${rows}
-      <button class="start-btn" data-key="${key}" data-sid="${esc(plan.sid)}">${logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
+      <button class="start-btn" data-key="${key}" data-pid="${esc(plan.pid)}">${logged?"View or edit":"Start"} <span class="go-arrow">→</span></button>
     </div>`;
   }).join("")||`<div class="wk-empty">No session scheduled.</div>`;
-  document.querySelectorAll("#wk-sessions .start-btn").forEach(btn=>btn.addEventListener("click",()=>openSession(btn.dataset.key,btn.dataset.sid)));
+  document.querySelectorAll("#wk-sessions .start-btn").forEach(btn=>btn.addEventListener("click",()=>openSession(btn.dataset.key,btn.dataset.pid)));
 }
 
 function fieldHtml(ei,f,value,attrs){
@@ -561,7 +591,7 @@ function bindWorkoutEvents(){
       save(); renderWorkout();
     });
   });
-  document.querySelectorAll(".log-field").forEach(el=>{
+  document.querySelectorAll("#ex-list .log-field").forEach(el=>{
     el.addEventListener("change",()=>{
       const ei=parseInt(el.dataset.ei), ex=S.session.exercises[ei];
       if(el.dataset.ri!==undefined) ex.rows[parseInt(el.dataset.ri)][el.dataset.k]=el.value;
@@ -615,11 +645,12 @@ function newExercise(e,key){
   return base;
 }
 function sessionFromPlan(plan,key){
-  return {sid:plan.sid,blockId:plan.blockId,name:plan.name,tag:plan.tag,start:Date.now(),dateKey:key,editing:false,
+  return {pid:plan.pid,origKey:plan.origKey,sid:plan.sid,blockId:plan.blockId,name:plan.name,tag:plan.tag,start:Date.now(),dateKey:key,sourceDate:key,editing:false,
     exercises:plan.exercises.map(e=>newExercise(e,key))};
 }
 function sessionFromLog(log){
-  return {sid:log.sid,blockId:log.blockId,name:log.name,tag:log.tag,start:Date.now(),dateKey:log.dateKey,editing:true,notes:log.notes||"",
+  const pid=pidOf(log);
+  return {pid,origKey:pid?pid.split("|")[0]:null,sid:log.sid,blockId:log.blockId,name:log.name,tag:log.tag,start:Date.now(),dateKey:log.dateKey,sourceDate:log.dateKey,editing:true,notes:log.notes||"",
     exercises:log.exercises.map(ex=>({
       id:ex.id,n:ex.n,tgt:ex.tgt,t:ex.t,done:ex.done,note:ex.note||"",open:false,how:ex.how||"",
       opts:ex.t==="select"&&ex.note?[ex.note]:ex.opts,
@@ -633,9 +664,9 @@ function beginSession(session){
   if(S.session){ toast("Finish or discard the open session first"); goTo("workout"); return; }
   S.session=session; save(); goTo("workout");
 }
-function openSession(key,sid){
-  const plan=sessionsFor(key).find(p=>p.sid===sid); if(!plan) return;
-  const log=S.history.find(h=>logMatches(h,key,sid,plan.name));
+function openSession(key,pid){
+  const plan=sessionsFor(key).find(p=>p.pid===pid); if(!plan) return;
+  const log=findLog(plan);
   beginSession(log?sessionFromLog(log):sessionFromPlan(plan,key));
 }
 
@@ -653,13 +684,17 @@ function exerciseValue(ex){
   }
   return ex.note||"done";
 }
-function renderSummary(){
-  const cs=S.session; if(!cs) return;
+function renderSummaryTitle(){
+  const cs=S.session, dk=cs.dateKey||todayKey();
   const elapsed=Math.round((Date.now()-cs.start)/60000);
-  const dk=cs.dateKey||todayKey();
   const sdate=parseKey(dk);
   const dateLabel=dk===todayKey()?"Today":`${DAYS[sdate.getDay()]}, ${MONTHS[sdate.getMonth()]} ${sdate.getDate()}`;
   document.getElementById("sum-sub").textContent=`${cs.name} · ${dateLabel} · ${elapsed} min`;
+}
+function renderSummary(){
+  const cs=S.session; if(!cs) return;
+  renderSummaryTitle();
+  document.getElementById("sum-date").value=cs.dateKey||todayKey();
   document.getElementById("sum-notes").value=cs.notes||"";
   const btn=document.getElementById("save-btn");
   btn.disabled=false; btn.textContent="Save to Google Sheet";
@@ -688,8 +723,11 @@ async function doSave(){
   const cs=S.session;
   const [dy,dm,dd]=(cs.dateKey||todayKey()).split("-").map(Number);
   const notes=document.getElementById("sum-notes").value.trim();
+  const [py,pm,pd]=(cs.sourceDate||cs.dateKey||todayKey()).split("-").map(Number);
   const payload={
+    id:cs.pid||`${cs.sourceDate||cs.dateKey}|${cs.name}`,
     date:`${dm}/${dd}/${dy}`,
+    previousDate:`${pm}/${pd}/${py}`,
     name:cs.name,
     notes,
     exercises:cs.exercises.filter(e=>e.done).map(ex=>({name:ex.n,value:exerciseValue(ex),target:ex.tgt||""}))
@@ -720,7 +758,7 @@ function archiveSession(){
   const cs=S.session, key=cs.dateKey||todayKey();
   const notes=document.getElementById("sum-notes")?document.getElementById("sum-notes").value.trim():"";
   const entry={
-    dateKey:key, sid:cs.sid, blockId:cs.blockId,
+    dateKey:key, pid:cs.pid, sid:cs.sid, blockId:cs.blockId,
     name:cs.name, tag:cs.tag||"",
     done:cs.exercises.filter(e=>e.done).length,
     total:cs.exercises.length,
@@ -733,8 +771,11 @@ function archiveSession(){
     }))
   };
   // Replace a resubmitted session only, so other sessions that day stay logged.
-  const idx=S.history.findIndex(h=>logMatches(h,key,cs.sid,cs.name));
+  const idx=cs.pid
+    ?S.history.findIndex(h=>pidOf(h)===cs.pid)
+    :S.history.findIndex(h=>h.dateKey===(cs.sourceDate||key)&&h.name===cs.name&&!pidOf(h));
   if(idx>=0) S.history[idx]=entry; else S.history.unshift(entry);
+  if(cs.pid&&cs.origKey&&blockFor(cs.origKey)) moveSession(cs.pid,key);
   S.session=null; save();
 }
 
@@ -791,14 +832,18 @@ function renderCalendarDetail(){
   const usedLogs=new Set();
   let html=`<div class="cal-detail-date">${dateStr}</div>`;
   plans.forEach(plan=>{
-    const log=logs.find(h=>logMatches(h,key,plan.sid,plan.name));
+    const log=findLog(plan);
     if(log){ usedLogs.add(log); html+=logDetail(log,S.history.indexOf(log)); return; }
     const rows=plan.exercises.map(e=>`<div class="cal-future-ex"><span>${esc(e.n)}</span>${e.tgt?`<span class="cal-future-tgt">${esc(e.tgt)}</span>`:""}</div>`).join("");
     html+=`<div class="cal-detail">
       <div class="cal-detail-head"><div class="cal-detail-name" style="margin-bottom:0">${esc(plan.name)}${key<todayK?` <span style="font-size:12px;font-weight:400">— not logged</span>`:""}</div></div>
       <div class="wk-chips">${chips(plan)}</div>
       ${rows}
-      <button class="cal-open-btn" data-key="${key}" data-sid="${esc(plan.sid)}">${key===todayK?"Open today's workout":"Open workout"} →</button>
+      <button class="cal-open-btn" data-key="${key}" data-pid="${esc(plan.pid)}">${key===todayK?"Open today's workout":"Open workout"} →</button>
+      <div class="move-row">
+        <input class="log-field" type="date" value="${key}" aria-label="New date for ${esc(plan.name)}">
+        <button class="move-btn" data-pid="${esc(plan.pid)}">Move</button>
+      </div>
     </div>`;
   });
   logs.filter(log=>!usedLogs.has(log)).forEach(log=>{ html+=logDetail(log,S.history.indexOf(log)); });
@@ -807,7 +852,18 @@ function renderCalendarDetail(){
   wrap.querySelectorAll(".cal-open-btn").forEach(btn=>{
     btn.addEventListener("click",()=>{
       if(btn.dataset.log!==undefined) beginSession(sessionFromLog(S.history[parseInt(btn.dataset.log)]));
-      else openSession(btn.dataset.key,btn.dataset.sid);
+      else openSession(btn.dataset.key,btn.dataset.pid);
+    });
+  });
+  wrap.querySelectorAll(".move-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const to=btn.previousElementSibling.value;
+      if(!to||to===calSelected) return;
+      moveSession(btn.dataset.pid,to); save();
+      const date=parseKey(to);
+      calSelected=to; calYear=date.getFullYear(); calMonth=date.getMonth();
+      toast(`Moved to ${shortDate(to)}`);
+      renderCalendar();
     });
   });
 }
@@ -837,6 +893,10 @@ document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",
 
 document.getElementById("finish-btn").addEventListener("click",()=>{ renderSummary(); goTo("summary"); });
 document.getElementById("save-btn").addEventListener("click",doSave);
+document.getElementById("sum-date").addEventListener("change",e=>{
+  if(!S.session||!e.target.value) return;
+  S.session.dateKey=e.target.value; save(); renderSummaryTitle();
+});
 
 let discardArmed=false;
 document.getElementById("discard-btn").addEventListener("click",e=>{
