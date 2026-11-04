@@ -303,7 +303,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="program.js?v=3"></script>
+<script src="program.js?v=4"></script>
 <script>
 const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -311,6 +311,7 @@ const MONTHS_FULL=["January","February","March","April","May","June","July","Aug
 const TAG_CHIPS={strength:"chip-strength",climb:"chip-climb",cycle:"chip-cycle",cardio:"chip-cycle",fingers:"chip-climb"};
 
 // ── STATE ──────────────────────────────────────────────────────────────────
+let discardArmed=false;
 let S = {
   sheetId: "",
   gConnected: false, blockStart: null,
@@ -344,7 +345,7 @@ function resolve(value,week,ctx){ return typeof value==="function"?value(week,ct
 function completedBefore(block,key,sid,field,value){
   return S.history.filter(h=>h.blockId===block.id&&h.sid===sid&&h.dateKey<key
     &&!block.lightWeeks.includes(weekOf(block,h.dateKey))
-    &&h.exercises.some(e=>e.vals&&e.vals[field]===value)).length;
+    &&(h.exercises||[]).some(e=>e.vals&&e.vals[field]===value)).length;
 }
 // A planned session keeps one id, built from its original date, wherever it moves.
 function pidOf(log){ return log.pid||(log.sid?`${log.dateKey}|${log.sid}`:null); }
@@ -622,7 +623,7 @@ function bindWorkoutEvents(){
 
 // ── SESSION INIT ───────────────────────────────────────────────────────────
 function lastLog(id,key){
-  const logs=S.history.filter(h=>h.dateKey<key&&h.exercises.some(e=>e.id===id&&e.done))
+  const logs=S.history.filter(h=>h.dateKey<key&&(h.exercises||[]).some(e=>e.id===id&&e.done))
     .sort((a,b)=>b.dateKey.localeCompare(a.dateKey));
   return logs[0]?.exercises.find(e=>e.id===id&&e.done)||null;
 }
@@ -651,7 +652,7 @@ function sessionFromPlan(plan,key){
 function sessionFromLog(log){
   const pid=pidOf(log);
   return {pid,origKey:pid?pid.split("|")[0]:null,sid:log.sid,blockId:log.blockId,name:log.name,tag:log.tag,start:Date.now(),dateKey:log.dateKey,sourceDate:log.dateKey,editing:true,notes:log.notes||"",
-    exercises:log.exercises.map(ex=>({
+    exercises:(log.exercises||[]).map(ex=>({
       id:ex.id,n:ex.n,tgt:ex.tgt,t:ex.t,done:ex.done,note:ex.note||"",open:false,how:ex.how||"",
       opts:ex.t==="select"&&ex.note?[ex.note]:ex.opts,
       vals:{...(ex.vals||{})},prefill:{},rows:ex.rows?.length?ex.rows:[{}],
@@ -815,7 +816,7 @@ function renderCalendar(){
 
 function logDetail(log,idx){
   const donePct=log.total?Math.round(log.done/log.total*100):0;
-  const rows=log.exercises.filter(e=>e.done).map(ex=>`<div class="cal-detail-row"><span class="cal-detail-ex">${esc(ex.n)}</span><span class="cal-detail-val">${esc(exerciseValue(ex))}</span></div>`).join("");
+  const rows=(log.exercises||[]).filter(e=>e.done).map(ex=>`<div class="cal-detail-row"><span class="cal-detail-ex">${esc(ex.n)}</span><span class="cal-detail-val">${esc(exerciseValue(ex))}</span></div>`).join("");
   return `<div class="cal-detail">
     <div class="cal-detail-name">${esc(log.name)} <span style="font-size:12px;font-weight:400;color:var(--text3)">· ${log.elapsed} min · ${donePct}%</span></div>
     ${rows}
@@ -898,7 +899,6 @@ document.getElementById("sum-date").addEventListener("change",e=>{
   S.session.dateKey=e.target.value; save(); renderSummaryTitle();
 });
 
-let discardArmed=false;
 document.getElementById("discard-btn").addEventListener("click",e=>{
   if(!discardArmed){ discardArmed=true; e.target.textContent="Tap again to discard"; return; }
   S.session=null; save(); renderWorkout();
